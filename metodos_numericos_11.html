@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Métodos Numéricos</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0e1a; --surface:#111827; --surface2:#1a2236; --border:#1e3a5f;
+  --accent:#00c9ff; --accent2:#7b61ff; --accent3:#00ffc8; --text:#e2e8f0; --text-muted:#64748b;
+  --u1:#00c9ff; --u2:#7b61ff; --u3:#ff6b6b; --u4:#f97316; --u5:#22c55e;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,201,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,201,255,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+body::after{content:'';position:fixed;top:-200px;left:-200px;width:600px;height:600px;background:radial-gradient(circle,rgba(0,201,255,0.06) 0%,transparent 70%);pointer-events:none;z-index:0;animation:float 8s ease-in-out infinite;will-change:transform;}
+@keyframes float{0%,100%{transform:translate3d(0,0,0);}50%{transform:translate3d(60px,40px,0);}}
+
+/* HEADER */
+header{position:sticky;top:0;z-index:100;padding:0 2rem;height:70px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:rgba(10,14,26,0.95);backdrop-filter:blur(8px);}
+.logo{font-family:'Space Mono',monospace;font-size:.75rem;color:var(--accent);letter-spacing:.15em;text-transform:uppercase;display:flex;align-items:center;gap:10px;}
+.logo-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;}
+nav{display:flex;align-items:center;gap:2rem;}
+nav a{font-size:.8rem;color:var(--text-muted);text-decoration:none;letter-spacing:.05em;transition:color .2s;font-family:'Space Mono',monospace;}
+nav a:hover{color:var(--accent);}
+.nav-btn{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000!important;padding:6px 16px;border-radius:6px;font-weight:700!important;font-size:.75rem!important;}
+
+/* HERO */
+.hero{position:relative;z-index:5;text-align:center;padding:70px 2rem 50px;}
+.hero-tag{display:inline-block;background:rgba(0,201,255,.1);border:1px solid rgba(0,201,255,.3);color:var(--accent);font-family:'Space Mono',monospace;font-size:.7rem;letter-spacing:.2em;padding:6px 16px;border-radius:100px;margin-bottom:24px;animation:fadeUp .6s ease both;}
+.hero h1{font-size:clamp(2.5rem,6vw,5rem);font-weight:800;line-height:1.05;letter-spacing:-.03em;animation:fadeUp .6s .1s ease both;}
+.hero h1 span{background:linear-gradient(135deg,var(--accent),var(--accent2),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero p{margin:20px auto 0;color:var(--text-muted);font-size:1rem;max-width:500px;line-height:1.7;animation:fadeUp .6s .2s ease both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+
+/* MAIN */
+.main{position:relative;z-index:5;display:grid;grid-template-columns:280px 1fr;max-width:1400px;margin:0 auto;padding:0 2rem 4rem;}
+
+/* SIDEBAR */
+.sidebar{padding:2rem 1.5rem 2rem 0;border-right:1px solid var(--border);}
+.sidebar-title{font-family:'Space Mono',monospace;font-size:.65rem;color:var(--text-muted);letter-spacing:.2em;text-transform:uppercase;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.unit{margin-bottom:8px;border-radius:12px;overflow:hidden;border:1px solid transparent;transition:border-color .3s;}
+.unit.active{border-color:var(--border);}
+.unit-header{display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer;border-radius:10px;transition:background .2s;user-select:none;}
+.unit-header:hover{background:var(--surface2);}
+.unit-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;transition:box-shadow .3s;}
+.unit.active .unit-dot{box-shadow:0 0 10px currentColor;}
+.unit-name{flex:1;font-size:.85rem;font-weight:600;letter-spacing:.02em;}
+.unit-badge{font-family:'Space Mono',monospace;font-size:.6rem;padding:2px 8px;border-radius:100px;background:rgba(255,255,255,.05);color:var(--text-muted);}
+.unit-chevron{transition:transform .3s ease;color:var(--text-muted);font-size:.7rem;}
+.unit.active .unit-chevron{transform:rotate(90deg);}
+.unit-topics{max-height:0;overflow:hidden;transition:max-height .4s ease,padding .3s;padding:0 10px;}
+.unit.active .unit-topics{max-height:600px;padding:4px 10px 10px;}
+.topic-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:background .2s,color .2s;font-size:.82rem;color:var(--text-muted);margin-bottom:2px;}
+.topic-item:hover{background:rgba(255,255,255,.04);color:var(--text);}
+.topic-item.active{color:var(--text);background:rgba(0,201,255,.08);}
+.topic-icon{width:6px;height:6px;border-radius:50%;background:var(--text-muted);flex-shrink:0;transition:background .2s;}
+.topic-item.active .topic-icon,.topic-item:hover .topic-icon{background:var(--accent);}
+.topic-disabled{display:flex;align-items:center;gap:10px;padding:8px 10px;font-size:.82rem;color:var(--text-muted);opacity:.35;pointer-events:none;}
+
+/* CONTENT */
+.content{padding:2rem 0 2rem 2.5rem;}
+.content-panel{display:none;animation:panelIn .4s ease;}
+.content-panel.active{display:block;}
+@keyframes panelIn{from{opacity:0;transform:translateX(16px);}to{opacity:1;transform:translateX(0);}}
+.panel-breadcrumb{font-family:'Space Mono',monospace;font-size:.65rem;color:var(--text-muted);letter-spacing:.1em;margin-bottom:20px;display:flex;align-items:center;gap:8px;}
+.panel-breadcrumb span{color:var(--accent);}
+.panel-title{font-size:2rem;font-weight:800;letter-spacing:-.02em;margin-bottom:8px;}
+.panel-subtitle{color:var(--text-muted);font-size:.9rem;margin-bottom:32px;line-height:1.6;max-width:600px;}
+.info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:32px;}
+.info-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;transition:border-color .3s,transform .2s;}
+.info-card:hover{border-color:var(--accent);transform:translateY(-2px);}
+.info-card-icon{font-size:1.5rem;margin-bottom:10px;}
+.info-card-label{font-family:'Space Mono',monospace;font-size:.6rem;color:var(--text-muted);letter-spacing:.15em;text-transform:uppercase;margin-bottom:4px;}
+.info-card-value{font-size:.9rem;font-weight:600;}
+.section{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:20px;}
+.section h3{font-size:1rem;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.section h3::before{content:'';display:inline-block;width:4px;height:18px;background:linear-gradient(to bottom,var(--accent),var(--accent2));border-radius:2px;}
+.section p{color:var(--text-muted);font-size:.875rem;line-height:1.75;margin-bottom:12px;}
+.formula{background:#0d1220;border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:8px;padding:16px 20px;font-family:'Space Mono',monospace;font-size:.82rem;color:var(--accent3);margin:14px 0;overflow-x:auto;white-space:pre-wrap;}
+.steps{counter-reset:step;list-style:none;display:flex;flex-direction:column;gap:10px;margin-top:14px;}
+.steps li{counter-increment:step;display:flex;align-items:flex-start;gap:14px;font-size:.875rem;color:var(--text-muted);line-height:1.6;}
+.steps li::before{content:counter(step);background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:.65rem;font-weight:700;flex-shrink:0;margin-top:1px;}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;}
+.tag{background:rgba(0,201,255,.08);border:1px solid rgba(0,201,255,.2);color:var(--accent);font-family:'Space Mono',monospace;font-size:.65rem;padding:4px 12px;border-radius:100px;letter-spacing:.05em;}
+
+/* CALCULATOR */
+.calc-step{margin-bottom:16px;}
+.calc-step-label{font-family:'Space Mono',monospace;font-size:.7rem;color:var(--accent);letter-spacing:.1em;margin-bottom:12px;text-transform:uppercase;}
+.calc-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.calc-input{background:#0d1220;border:1px solid var(--border);color:var(--text);font-family:'Space Mono',monospace;font-size:.88rem;padding:9px 14px;border-radius:8px;outline:none;transition:border-color .2s;width:100%;max-width:320px;}
+.calc-input:focus{border-color:var(--accent);}
+.calc-input-sm{width:80px;background:#0d1220;border:1px solid var(--border);color:var(--text);font-family:'Space Mono',monospace;font-size:.88rem;padding:8px 10px;border-radius:8px;outline:none;text-align:center;transition:border-color .2s;}
+.calc-input-sm:focus{border-color:var(--accent);}
+.calc-btn{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;border:none;font-family:'Syne',sans-serif;font-size:.82rem;font-weight:700;padding:9px 20px;border-radius:8px;cursor:pointer;transition:opacity .2s,transform .15s;letter-spacing:.03em;}
+.calc-btn:hover{opacity:.85;transform:translateY(-1px);}
+.calc-btn-u3{background:linear-gradient(135deg,var(--u3),#e04444);}
+.calc-btn-u4{background:linear-gradient(135deg,var(--u4),#dc6a0a);}
+.calc-btn-u5{background:linear-gradient(135deg,var(--u5),#16a34a);}
+.calc-btn-secondary{background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);font-family:'Syne',sans-serif;font-size:.78rem;font-weight:600;padding:8px 16px;border-radius:8px;cursor:pointer;transition:background .2s,color .2s;}
+.calc-btn-secondary:hover{background:var(--border);color:var(--text);}
+.calc-matrix-hint{font-size:.75rem;color:var(--text-muted);margin-bottom:12px;font-style:italic;}
+.matrix-grid{display:grid;gap:6px;width:fit-content;}
+.matrix-row{display:flex;gap:6px;align-items:center;}
+.matrix-cell{width:72px;background:#0d1220;border:1px solid var(--border);color:var(--text);font-family:'Space Mono',monospace;font-size:.82rem;padding:8px 10px;border-radius:8px;outline:none;text-align:center;transition:border-color .2s,background .2s;}
+.matrix-cell:focus{border-color:var(--u3);background:rgba(255,107,107,.06);}
+.matrix-cell.b-col{border-color:rgba(123,97,255,.4);background:rgba(123,97,255,.06);}
+.matrix-cell.b-col:focus{border-color:var(--accent2);}
+.matrix-sep{color:var(--text-muted);font-size:1.2rem;padding:0 4px;}
+.matrix-label{font-family:'Space Mono',monospace;font-size:.6rem;color:var(--text-muted);text-align:center;margin-bottom:4px;letter-spacing:.1em;}
+
+/* RESULTS */
+.result-box{background:rgba(0,255,200,.05);border:1px solid rgba(0,255,200,.25);border-radius:14px;padding:24px 28px;}
+.result-box-title{font-family:'Space Mono',monospace;font-size:.7rem;color:var(--accent3);letter-spacing:.15em;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.result-row{display:flex;align-items:center;gap:16px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.result-row:last-child{border-bottom:none;}
+.result-var{font-family:'Space Mono',monospace;font-size:.85rem;color:var(--accent2);min-width:60px;}
+.result-val{font-family:'Space Mono',monospace;font-size:1rem;font-weight:700;color:var(--accent3);}
+.result-bar{flex:1;height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
+.result-bar-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent3));border-radius:2px;transition:width .6s ease;}
+.error-box{background:rgba(255,107,107,.08);border:1px solid rgba(255,107,107,.3);border-radius:10px;padding:14px 18px;font-family:'Space Mono',monospace;font-size:.78rem;color:var(--u3);}
+.info-result{background:rgba(0,201,255,.06);border:1px solid rgba(0,201,255,.2);border-radius:10px;padding:14px 20px;font-family:'Space Mono',monospace;font-size:.8rem;color:var(--accent);line-height:1.8;}
+.warn-box{background:rgba(255,189,0,.07);border:1px solid rgba(255,189,0,.3);border-radius:10px;padding:12px 16px;font-family:'Space Mono',monospace;font-size:.72rem;color:#ffbd2e;}
+.ok-box{background:rgba(0,255,200,.07);border:1px solid rgba(0,255,200,.25);border-radius:10px;padding:12px 16px;font-family:'Space Mono',monospace;font-size:.72rem;color:var(--accent3);}
+
+/* ITER TABLE */
+.iter-table{width:100%;border-collapse:collapse;font-family:'Space Mono',monospace;font-size:.72rem;}
+.iter-table th{background:var(--surface2);color:var(--accent);padding:8px 12px;text-align:right;font-weight:700;letter-spacing:.05em;border-bottom:1px solid var(--border);white-space:nowrap;}
+.iter-table th:first-child{text-align:center;}
+.iter-table td{padding:7px 12px;text-align:right;color:var(--text-muted);border-bottom:1px solid rgba(255,255,255,.03);}
+.iter-table td:first-child{text-align:center;color:var(--accent2);font-weight:700;}
+.iter-table tr:hover td{background:rgba(255,255,255,.02);}
+
+/* CODE */
+.code-block{background:#080d18;border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-top:4px;}
+.code-header{display:flex;align-items:center;gap:10px;padding:10px 16px;background:#0d1525;border-bottom:1px solid var(--border);}
+.code-dots{display:flex;gap:6px;}
+.code-dots span{width:10px;height:10px;border-radius:50%;display:block;}
+.code-lang{flex:1;font-family:'Space Mono',monospace;font-size:.65rem;color:var(--text-muted);letter-spacing:.1em;}
+.copy-btn{background:rgba(0,201,255,.1);border:1px solid rgba(0,201,255,.2);color:var(--accent);font-family:'Space Mono',monospace;font-size:.65rem;padding:4px 12px;border-radius:6px;cursor:pointer;transition:background .2s;letter-spacing:.05em;}
+.copy-btn:hover{background:rgba(0,201,255,.2);}
+.code-content{padding:20px;overflow-x:auto;font-family:'Space Mono',monospace;font-size:.78rem;line-height:1.8;}
+.code-content code{display:block;white-space:pre;}
+.kw{color:#7b61ff;} .cls{color:#00ffc8;font-weight:700;} .fn{color:#00c9ff;} .str{color:#ffbd2e;} .num{color:#ff6b6b;} .cmt{color:#3d5a7a;font-style:italic;}
+
+/* COMING SOON */
+.coming-panel{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 40px;text-align:center;background:var(--surface);border:1px dashed var(--border);border-radius:20px;margin-top:2rem;}
+.coming-panel .big-icon{font-size:3rem;margin-bottom:16px;opacity:.5;}
+.coming-panel h3{font-size:1.2rem;margin-bottom:8px;}
+.coming-panel p{color:var(--text-muted);font-size:.875rem;}
+
+/* GAUS-JORDAN steps */
+.gj-iteration{background:#0a0e1a;border:1px solid var(--border);border-left:3px solid var(--u3);border-radius:10px;padding:16px 18px;margin-bottom:12px;}
+.gj-iter-title{font-family:'Space Mono',monospace;font-size:.65rem;color:var(--u3);letter-spacing:.15em;margin-bottom:10px;text-transform:uppercase;}
+.gj-matrix-display{font-family:'Space Mono',monospace;font-size:.78rem;line-height:1.9;color:var(--text-muted);overflow-x:auto;white-space:pre;}
+.gj-matrix-display .pivot-row{color:var(--accent3);}
+
+footer{position:relative;z-index:5;border-top:1px solid var(--border);padding:24px 2rem;display:flex;justify-content:space-between;align-items:center;font-family:'Space Mono',monospace;font-size:.65rem;color:var(--text-muted);max-width:1400px;margin:0 auto;}
+/* INTRO OVERLAY */
+.intro-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(10, 14, 26, 0.95); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; transition: opacity 0.4s ease, visibility 0.4s ease; will-change: opacity; }
+.intro-overlay.hidden { opacity: 0; visibility: hidden; backdrop-filter: none; }
+.intro-content { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 40px 50px; max-width: 600px; width: 90%; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); animation: introPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; will-change: transform, opacity; }
+@keyframes introPop { from { opacity: 0; transform: scale(0.95) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+.intro-tag { display: inline-block; background: rgba(0,201,255,.1); border: 1px solid rgba(0,201,255,.3); color: var(--accent); font-family: 'Space Mono', monospace; font-size: .7rem; letter-spacing: .2em; padding: 6px 16px; border-radius: 100px; margin-bottom: 20px; }
+.intro-content h2 { font-size: 2.5rem; font-weight: 800; line-height: 1.1; margin-bottom: 20px; letter-spacing: -0.03em; }
+.intro-content h2 span { background: linear-gradient(135deg, var(--accent), var(--accent2), var(--accent3)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.intro-content p { color: var(--text-muted); font-size: .95rem; line-height: 1.7; margin-bottom: 30px; }
+.intro-features { display: flex; flex-direction: column; gap: 12px; margin-bottom: 30px; text-align: left; }
+.intro-feature { display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.03); padding: 12px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
+.feature-icon { width: 32px; height: 32px; border-radius: 8px; background: rgba(123,97,255,0.1); color: var(--accent2); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+.feature-text { font-size: .85rem; color: var(--text); font-weight: 600; }
+.intro-btn { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #000; border: none; font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; padding: 14px 32px; border-radius: 12px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; letter-spacing: .03em; width: 100%; }
+.intro-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,201,255,0.2); }
+/* AUTHORS OVERLAY */
+.authors-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 30px; text-align: center; }
+.author-item { background: rgba(255,255,255,0.03); padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); font-family: 'Space Mono', monospace; font-size: .85rem; color: var(--text); font-weight: 600; letter-spacing: 0.05em; transition: background 0.3s, transform 0.2s, border-color 0.3s; }
+.author-item:hover { background: rgba(0,201,255,0.08); border-color: rgba(0,201,255,0.3); transform: translateY(-2px); color: var(--accent); }
+/* RESPONSIVE DESIGN */
+@media (max-width: 900px) {
+  .main { grid-template-columns: 1fr; padding: 0 1.5rem 3rem; }
+  .sidebar { border-right: none; border-bottom: 1px solid var(--border); padding: 1rem 0 2rem 0; margin-bottom: 1rem; }
+  .content { padding: 1rem 0 0 0; }
+}
+
+@media (max-width: 600px) {
+  header { flex-direction: column; padding: 1rem; height: auto; gap: 12px; }
+  nav { gap: 1.5rem; justify-content: center; width: 100%; }
+  .hero { padding: 40px 1.5rem 30px; }
+  .intro-content { padding: 25px 20px; border-radius: 16px; }
+  .intro-content h2 { font-size: 1.8rem; }
+  .intro-features { gap: 8px; }
+  .calc-row { flex-direction: column; align-items: flex-start; }
+  .calc-row > div { width: 100%; }
+  .calc-input-sm { width: 100% !important; }
+  .calc-btn, .calc-btn-secondary { width: 100%; text-align: center; justify-content: center; display: flex; }
+  .result-box { padding: 20px; }
+  .result-row { flex-direction: column; align-items: stretch; gap: 8px; }
+  .result-var { min-width: auto; }
+  .result-bar { width: 100%; height: 4px; margin: 4px 0; }
+  .info-grid { grid-template-columns: 1fr; }
+  footer { flex-direction: column; text-align: center; gap: 10px; }
+}
+</style>
+</head>
+<body>
+
+<!-- OVERLAY DE INTRODUCCIÓN -->
+<div id="intro-overlay" class="intro-overlay">
+  <div class="intro-content">
+    <div class="intro-tag">✦ BIENVENIDO</div>
+    <h2>Introducción a los<br><span>Métodos Numéricos</span></h2>
+    <p>Los métodos numéricos son técnicas matemáticas usadas para formular problemas de tal forma que puedan resolverse usando operaciones aritméticas. Son esenciales en la ingeniería y ciencias para aproximar soluciones donde los métodos analíticos fallan o son demasiado complejos.</p>
+    <div class="intro-features">
+      <div class="intro-feature">
+        <div class="feature-icon">⚡</div>
+        <div class="feature-text">Resolución de ecuaciones complejas</div>
+      </div>
+      <div class="intro-feature">
+        <div class="feature-icon">📊</div>
+        <div class="feature-text">Análisis de grandes volúmenes de datos</div>
+      </div>
+      <div class="intro-feature">
+        <div class="feature-icon">🎯</div>
+        <div class="feature-text">Aproximaciones de alta precisión</div>
+      </div>
+    </div>
+    <button class="intro-btn" onclick="closeIntro()">Empezar a aprender →</button>
+  </div>
+</div>
+
+<!-- OVERLAY DE AUTORES -->
+<div id="authors-overlay" class="intro-overlay hidden">
+  <div class="intro-content">
+    <div class="intro-tag">✦ EQUIPO DE DESARROLLO</div>
+    <h2>Autores del<br><span>Proyecto</span></h2>
+    <div class="authors-list">
+      <div class="author-item">HERNANDEZ OCHOA JOSE ALEJANDRO</div>
+      <div class="author-item">SANTIZ GUZMAN AMMY LIZETH</div>
+      <div class="author-item">VELAZQUEZ ORDOÑES ADRIAN ELEAZAR</div>
+      <div class="author-item">AGUILAR SÁNCHEZ KEILA PAOLA</div>
+    </div>
+    <button class="intro-btn" onclick="closeAuthors()">Cerrar</button>
+  </div>
+</div>
+
+<header>
+  <div class="logo"><div class="logo-icon">∫</div>MÉTODOS NUMÉRICOS</div>
+  <nav>
+    <a href="#" onclick="event.preventDefault(); window.scrollTo({top: 0, behavior: 'smooth'});">Inicio</a>
+    <a href="#" onclick="event.preventDefault(); document.querySelector('.main').scrollIntoView({behavior: 'smooth'});">Temario</a>
+    <a href="#" onclick="event.preventDefault(); showAuthors();" class="nav-btn">Autores</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <div class="hero-tag">✦ INGENIERÍA NUMÉRICA</div>
+  <h1>Métodos<br><span>Numéricos</span></h1>
+</div>
+
+<div class="main">
+<!-- ══════════════ SIDEBAR ══════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-title">Contenido del Curso</div>
+
+  <!-- U1 -->
+  <div class="unit active" id="u1-acc">
+    <div class="unit-header" onclick="toggleUnit('u1-acc')">
+      <div class="unit-dot" style="color:var(--u1);background:var(--u1)"></div>
+      <span class="unit-name">Unidad 1</span>
+      <span class="unit-badge">3 temas</span>
+      <span class="unit-chevron">▶</span>
+    </div>
+    <div class="unit-topics">
+      <div class="topic-item active" onclick="showPanel('errAbs',this)"><div class="topic-icon"></div>Error Absoluto</div>
+      <div class="topic-item" onclick="showPanel('errRel',this)"><div class="topic-icon"></div>Error Relativo</div>
+      <div class="topic-item" onclick="showPanel('errPct',this)"><div class="topic-icon"></div>Error Porcentual</div>
+    </div>
+  </div>
+
+  <!-- U2 -->
+  <div class="unit" id="u2-acc">
+    <div class="unit-header" onclick="toggleUnit('u2-acc')">
+      <div class="unit-dot" style="color:var(--u2);background:var(--u2)"></div>
+      <span class="unit-name">Unidad 2</span>
+      <span class="unit-badge">2 temas</span>
+      <span class="unit-chevron">▶</span>
+    </div>
+    <div class="unit-topics">
+      <div class="topic-item" onclick="showPanel('biseccion',this)"><div class="topic-icon"></div>Bisección</div>
+      <div class="topic-item" onclick="showPanel('falsa',this)"><div class="topic-icon"></div>Falsa Posición</div>
+    </div>
+  </div>
+
+  <!-- U3 -->
+  <div class="unit" id="u3-acc">
+    <div class="unit-header" onclick="toggleUnit('u3-acc')">
+      <div class="unit-dot" style="color:var(--u3);background:var(--u3)"></div>
+      <span class="unit-name">Unidad 3</span>
+      <span class="unit-badge">4 temas</span>
+      <span class="unit-chevron">▶</span>
+    </div>
+    <div class="unit-topics">
+      <div class="topic-item" onclick="showPanel('gauss',this)"><div class="topic-icon" style="background:var(--u3)"></div>Eliminación Gaussiana</div>
+      <div class="topic-item" onclick="showPanel('gaussjordan',this)"><div class="topic-icon" style="background:var(--u3)"></div>Gauss-Jordan</div>
+      <div class="topic-item" onclick="showPanel('seidel',this)"><div class="topic-icon" style="background:var(--u3)"></div>Gauss-Seidel</div>
+      <div class="topic-item" onclick="showPanel('jacobi',this)"><div class="topic-icon" style="background:var(--u3)"></div>Jacobi</div>
+    </div>
+  </div>
+
+  <!-- U4 -->
+  <div class="unit" id="u4-acc">
+    <div class="unit-header" onclick="toggleUnit('u4-acc')">
+      <div class="unit-dot" style="color:var(--u4);background:var(--u4)"></div>
+      <span class="unit-name">Unidad 4</span>
+      <span class="unit-badge">6 temas</span>
+      <span class="unit-chevron">▶</span>
+    </div>
+    <div class="unit-topics">
+      <div class="topic-item" onclick="showPanel('tresPuntos',this)"><div class="topic-icon" style="background:var(--u4)"></div>Fórmula 3 Puntos</div>
+      <div class="topic-item" onclick="showPanel('cincoPuntos',this)"><div class="topic-icon" style="background:var(--u4)"></div>Fórmula 5 Puntos</div>
+      <div class="topic-item" onclick="showPanel('trapecio',this)"><div class="topic-icon" style="background:var(--u4)"></div>Regla del Trapecio</div>
+      <div class="topic-item" onclick="showPanel('simpson',this)"><div class="topic-icon" style="background:var(--u4)"></div>Regla de Simpson</div>
+      <div class="topic-item" onclick="showPanel('derivInt',this)"><div class="topic-icon" style="background:var(--u4)"></div>Derivadas e Integrales</div>
+      <div class="topic-item" onclick="showPanel('cuadratura',this)"><div class="topic-icon" style="background:var(--u4)"></div>Cuadratura Gaussiana</div>
+    </div>
+  </div>
+
+  <!-- U5 -->
+  <div class="unit" id="u5-acc">
+    <div class="unit-header" onclick="toggleUnit('u5-acc')">
+      <div class="unit-dot" style="color:var(--u5);background:var(--u5)"></div>
+      <span class="unit-name">Unidad 5</span>
+      <span class="unit-badge">2 temas</span>
+      <span class="unit-chevron">▶</span>
+    </div>
+    <div class="unit-topics">
+      <div class="topic-item" onclick="showPanel('lagrange',this)"><div class="topic-icon" style="background:var(--u5)"></div>Polinomial de Lagrange</div>
+      <div class="topic-item" onclick="showPanel('minCuad',this)"><div class="topic-icon" style="background:var(--u5)"></div>Mínimos Cuadrados</div>
+    </div>
+  </div>
+
+</aside>
+
+<!-- ══════════════ CONTENT ══════════════ -->
+<main class="content">
+
+<!-- ═══ U1: ERROR ABSOLUTO ═══ -->
+<div class="content-panel active" id="panel-errAbs">
+  <div class="panel-breadcrumb">UNIDAD 1 <span>›</span> ERROR ABSOLUTO</div>
+  <div class="panel-title">Error Absoluto</div>
+  <p class="panel-subtitle">Diferencia entre el valor verdadero y el valor aproximado, sin importar el signo.</p>
+  <div class="info-grid">
+    <div class="info-card"><div class="info-card-icon">📐</div><div class="info-card-label">Tipo</div><div class="info-card-value">Diferencia directa</div></div>
+    <div class="info-card"><div class="info-card-icon">📏</div><div class="info-card-label">Unidades</div><div class="info-card-value">Mismas que la magnitud</div></div>
+  </div>
+  <div class="section"><h3>Definición y Fórmula</h3>
+    <p>El error absoluto mide cuánto difiere el valor aproximado del valor real, en las mismas unidades de la magnitud medida.</p>
+    <div class="formula">Ea = |Valor_verdadero − Valor_aproximado|</div>
+  </div>
+  <div class="section"><h3>Calculadora</h3>
+    <div class="calc-step"><div class="calc-step-label">① Valor verdadero</div><input type="number" id="ea-vv" class="calc-input" placeholder="Ej: 3.14159" step="any"></div>
+    <div class="calc-step"><div class="calc-step-label">② Valor aproximado</div><input type="number" id="ea-va" class="calc-input" placeholder="Ej: 3.14" step="any"></div>
+    <button class="calc-btn" onclick="calcErrAbs()">▶ Calcular</button>
+    <div id="ea-result" style="margin-top:16px;display:none;"></div>
+  </div>
+  <div class="tags"><span class="tag">UNIDAD 1</span><span class="tag">ERRORES</span></div>
+</div>
+
+<!-- ═══ U1: ERROR RELATIVO ═══ -->
+<div class="content-panel" id="panel-errRel">
+  <div class="panel-breadcrumb">UNIDAD 1 <span>›</span> ERROR RELATIVO</div>
+  <div class="panel-title">Error Relativo</div>
+  <p class="panel-subtitle">Error absoluto dividido entre el valor verdadero; mide el error en proporción a la magnitud real.</p>
+  <div class="info-grid">
+    <div class="info-card"><div class="info-card-icon">📊</div><div class="info-card-label">Rango</div><div class="info-card-value">0 a 1 (adimensional)</div></div>
+    <div class="info-card"><div class="info-card-icon">🎯</div><div class="info-card-label">Uso</div><div class="info-card-value">Comparación entre magnitudes</div></div>
+  </div>
+  <div class="section"><h3>Definición y Fórmula</h3>
+    <p>El error relativo normaliza el error absoluto respecto al valor verdadero, permitiendo comparar errores de diferentes magnitudes.</p>
+    <div class="formula">Er = |Valor_verdadero − Valor_aproximado| / |Valor_verdadero|</div>
+  </div>
+  <div class="section"><h3>Calculadora</h3>
+    <div class="calc-step"><div class="calc-step-label">① Valor verdadero</div><input type="number" id="er-vv" class="calc-input" placeholder="Ej: 9.81" step="any"></div>
+    <div class="calc-step"><div class="calc-step-label">② Valor aproximado</div><input type="number" id="er-va" class="calc-input" placeholder="Ej: 9.8" step="any"></div>
+    <button class="calc-btn" onclick="calcErrRel()">▶ Calcular</button>
+    <div id="er-result" style="margin-top:16px;display:none;"></div>
+  </div>
+  <div class="tags"><span class="tag">UNIDAD 1</span><span class="tag">ERRORES</span></div>
+</div>
+
+<!-- ═══ U1: ERROR PORCENTUAL ═══ -->
+<div class="content-panel" id="panel-errPct">
+  <div class="panel-breadcrumb">UNIDAD 1 <span>›</span> ERROR PORCENTUAL</div>
+  <div class="panel-title">Error Porcentual</div>
+  <p class="panel-subtitle">Error relativo expresado en porcentaje (×100%). Forma más intuitiva de comunicar la precisión de un resultado.</p>
+  <div class="info-grid">
+    <div class="info-card"><div class="info-card-icon">%</div><div class="info-card-label">Unidades</div><div class="info-card-value">Porcentaje (%)</div></div>
+    <div class="info-card"><div class="info-card-icon">📉</div><div class="info-card-label">Objetivo</div><div class="info-card-value">Minimizar al máximo</div></div>
+  </div>
+  <div class="section"><h3>Definición y Fórmula</h3>
+    <p>El error porcentual es simplemente el error relativo multiplicado por 100, expresando la diferencia como porcentaje del valor verdadero.</p>
+    <div class="formula">Ep = (|Valor_verdadero − Valor_aproximado| / |Valor_verdadero|) × 100%</div>
+    <div class="formula">Error porcentual aprox: εa = |(xₙ − xₙ₋₁) / xₙ| × 100%</div>
+  </div>
+  <div class="section"><h3>Calculadora</h3>
+    <div class="calc-step"><div class="calc-step-label">① Valor verdadero</div><input type="number" id="ep-vv" class="calc-input" placeholder="Ej: 100" step="any"></div>
+    <div class="calc-step"><div class="calc-step-label">② Valor aproximado</div><input type="number" id="ep-va" class="calc-input" placeholder="Ej: 97.5" step="any"></div>
+    <button class="calc-btn" onclick="calcErrPct()">▶ Calcular</button>
+    <div id="ep-result" style="margin-top:16px;display:none;"></div>
+  </div>
+  <div class="tags"><span class="tag">UNIDAD 1</span><span class="tag">ERRORES</span></div>
+</div>
+
+<!-- ═══ U2: BISECCIÓN ═══ -->
+<div class="content-panel" id="panel-biseccion">
+  <div class="panel-breadcrumb">UNIDAD 2 <span>›</span> BISECCIÓN</div>
+  <div class="panel-title">Método de Bisección</div>
+  <p class="panel-subtitle">Divide el intervalo a la mitad en cada iteración para localizar la raíz de una función continua.</p>
+  <div class="info-grid">
+    <div class="info-card"><div class="info-card-icon">⚡</div><div class="info-card-label">Convergencia</div><div class="info-card-value">Lineal — Segura</div></div>
+    <div class="info-card"><div class="info-card-icon">✅</div><div class="info-card-label">Requisito</div><div class="info-card-value">f(a)·f(b) &lt; 0</div></div>
+  </div>
+  <div class="section"><h3>Fórmulas</h3>
+    <div class="formula">Xr = (Xl + Xu) / 2
+Si f(Xl)·f(Xr) &lt; 0 → nueva Xu = Xr, sino nueva Xl = Xr</div>
+  </div>
+  <div class="section"><h3>Calculadora — ingresa f(x) y el intervalo</h3>
+    <div class="calc-matrix-hint">Escribe la función usando JavaScript: Math.sin(x), Math.exp(x), Math.pow(x,2), etc.</div>
+    <div class="calc-step"><div class="calc-step-label">① f(x)</div><input type="text" id="bis-fx" class="calc-input" placeholder="Ej: Math.pow(x,3) - x - 2" value="Math.pow(x,3) - x - 2"></div>
+    <div class="calc-row" style="margin-top:12px;">
+      <div><div class="calc-step-label" style="margin-bottom:6px;">② a (Xl)</div><input type="number" id="bis-a" class="calc-input-sm" value="1" step="any"></div>
+      <div><div class="calc-step-label" style="margin-bottom:6px;">b (Xu)</div><input type="number" id="bis-b" class="calc-input-sm" value="2" step="any"></div>
+      <div><div class="calc-step-label" style="margin-bottom:6px;">Tolerancia</div><input type="number" id="bis-tol" class="calc-input-sm" style="width:100px" value="0.0001" step="any"></div>
+      <div><div class="calc-step-label" style="margin-bottom:6px;">Máx. iter</div><input type="number" id="bis-maxiter" class="calc-input-sm" style="width:80px" value="50"></div>
+    </div>
+    <div class="calc-row" style="margin-top:14px;gap:10px;">
+      <button class="calc-btn" style="background:linear-gradient(135deg,var(--u2),#5a40cc)" onclick="biseccionSolve()">▶ Resolver</button>
+      <button class="calc-btn-secondary" onclick="biseccionExample()">📋 Ejemplo</button>
+    </div>
+    <div id="bis-result" style="margin-top:16px;display:none;"></div>
+  </div>
+  <div class="section"><h3>Código Python</h3>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><span style="background:#ff5f56"></span><span style="background:#ffbd2e"></span><span style="background:#27c93f"></span></div><span class="code-lang">Biseccion.py</span><button class="copy-btn" onclick="copyCode(this)">⧉ Copiar</button></div>
+      <pre class="code-content"><code><span class="kw">def</span> <span class="fn">biseccion</span>(f, a, b, tol=<span class="num">1e-4</span>, max_iter=<span class="num">50</span>):
+    <span class="kw">if</span> f(a) * f(b) > <span class="num">0</span>:
+        <span class="kw">return</span> <span class="kw">None</span>
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(max_iter):
+        xr = (a + b) / <span class="num">2</span>
+        <span class="kw">if</span> <span class="fn">abs</span>(f(xr)) &lt; <span class="num">1e-14</span> <span class="kw">or</span> (i > <span class="num">0</span> <span class="kw">and</span> <span class="fn">abs</span>((xr - a) / xr) &lt; tol):
+            <span class="kw">return</span> xr
+        <span class="kw">if</span> f(a) * f(xr) &lt; <span class="num">0</span>:
+            b = xr
+        <span class="kw">else</span>:
+            a = xr
+    <span class="kw">return</span> (a + b) / <span class="num">2</span></code></pre>
+    </div>
+  </div>
+  <div class="tags"><span class="tag">UNIDAD 2</span><span class="tag">RAÍCES</span><span class="tag">BRACKETING</span></div>
+</div>
+
+<!-- ═══ U2: FALSA POSICIÓN ═══ -->
+<div class="content-panel" id="panel-falsa">
+  <div class="panel-breadcrumb">UNIDAD 2 <span>›</span> FALSA POSICIÓN</div>
+  <div class="panel-title">Falsa Posición</div>
+  <p class="panel-subtitle">Usa interpolación lineal entre los extremos del intervalo para estimar la raíz de manera más eficiente que bisección.</p>
+  <div class="info-grid">
+    <div class="info-card"><div class="info-card-icon">🎯</div><div class="info-card-label">Precisión</div><div class="info-card-value">Mayor que bisección</div></div>
+    <div class="info-card"><div class="info-card-icon">📉</div><div class="info-card-label">Técnica</div><div class="info-card-value">Interpolación lineal</div></div>
+  </div>
+  <div class="section"><h3>Fórmula</h3>
+    <div class="formula">Xr = Xu − [f(Xu)·(Xl − Xu)] / [f(Xl) − f(Xu)]</div>
+  </div>
+  <div class="section"><h3>Calculadora</h3>
+    <div class="calc-matrix-hint">Usa Math.sin(x), Math.cos(x), Math.exp(x), Math.log(x), Math.pow(x,n)</div>
+    <div class="calc-step"><div class="calc-step-label">① f(x)</div><input type="text" id="fp-fx" class="calc-input" placeholder="Ej: Math.exp(x) - 3*x" value="Math.exp(x) - 3*x"></div>
+    <div class="calc-row" style="margin-top:12px;">
+      <div><div class="calc-step-label" style="margin-bottom:6px;">② a</div><input type="number" id="fp-a" class="calc-input-sm" value="1" step="any"></div>
+      <div><div class="calc-step-label" style="margin-bottom:6px;">b</div><input type="number" id="fp-b" class="calc-input-sm" value="2" step="any"></div>
+      <div><div class="calc-step-label" style="margin-bottom:6px;">Tolerancia</div><input type="number" id="fp-tol" class="calc-input-sm" style="width:100px" value="0.0001" step="any"></div>
+      <div><div class="calc-step-label" style="margin-bottom:6px;">Máx. iter</div><input type="number" id="fp-maxiter" class="calc-input-sm" style="width:80px" value="50"></div>
+    </div>
+    <div class="calc-row" style="margin-top:14px;gap:10px;">
+      <button class="calc-btn" style="background:linear-gradient(135deg,var(--u2),#5a40cc)" onclick="falsaPosicionSolve()">▶ Resolver</button>
+      <button class="calc-btn-secondary" onclick="falsaExample()">📋 Ejemplo</button>
+    </div>
+    <div id="fp-result" style="margin-top:16px;display:none;"></div>
+  </div>
+  <div class="section"><h3>Código Python</h3>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><span style="background:#ff5f56"></span><span style="background:#ffbd2e"></span><span style="background:#27c93f"></span></div><span class="code-lang">FalsaPosicion.py</span><button class="copy-btn" onclick="copyCode(this)">⧉ Copiar</button></div>
+      <pre class="code-content"><code><span class="kw">def</span> <span class="fn">falsa_posicion</span>(f, a, b, tol=<span class="num">1e-4</span>, max_iter=<span class="num">50</span>):
+    <span class="kw">if</span> f(a) * f(b) > <span class="num">0</span>:
+        <span class="kw">return</span> <span class="kw">None</span>
+    xr = a
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(max_iter):
+        xr_old = xr
+        fa, fb = f(a), f(b)
+        xr = b - fb * (a - b) / (fa - fb)
+        <span class="kw">if</span> <span class="fn">abs</span>(f(xr)) &lt; <span class="num">1e-14</span> <span class="kw">or</span> (i > <span class="num">0</span> <span class="kw">and</span> <span class="fn">abs</span>((xr - xr_old) / xr) &lt; tol):
+            <span class="kw">return</span> xr
+        <span class="kw">if</span> fa * f(xr) &lt; <span class="num">0</span>:
+            b = xr
+        <span class="kw">else</span>:
+            a = xr
+    <span class="kw">return</span> xr</code></pre>
+    </div>
+  </div>
+  <div class="tags"><span class="tag">UNIDAD 2</span><span class="tag">REGULA FALSI</span><span class="tag">RAÍCES</span></div>
+</div>
+
+<!-- ═══ U3: ELIMINACIÓN GAUSSIANA ═══ -->
+<div class="content-panel" id="panel-gauss">
+  <div class="panel-breadcrumb">UNIDAD 3 <span>›</span> ELIMINACIÓN GAUSSIANA</div>
+  <div class="panel-title">Eliminación Gaussiana</div>
+  <p class="panel-subtitle">Método directo para resolver Ax=b reduciendo la matriz a forma triangular superior y aplicando sustitución hacia atrás.</p>
+  <div class="info-grid">
+    <div class="info-card"><div class="info-card-icon">🔢</div><div class="info-card-label">Tipo</div><div class="info-card-value">Directo — O(n³)</div></div>
+    <div class="info-card"><div class="info-card-icon">📐</div><div class="info-card-label">Sistema</div><div class="info-card-value">Ax = b</div></div>
+    <div class="info-card"><div class="info-card-icon">💻</div><div class="info-card-label">Lenguaje</div><div class="info-card-value">Java</div></div>
+  </div>
+  <div class="section"><h3>Fórmulas</h3>
+    <div class="formula">Factor:  m(i,k) = A[i][k] / A[k][k]
+Eliminación:  A[i][j] = A[i][j] − m·A[k][j]
+Sustitución: x[i] = (b[i] − Σ A[i][j]·x[j]) / A[i][i]</div>
+  </div>
+  <div class="section"><h3>Calculadora Interactiva</h3>
+    <div class="calc-step"><div class="calc-step-label">① Tamaño n</div>
+      <div class="calc-row"><input type="number" id="eg-n" class="calc-input-sm" min="1" max="6" value="3"><button class="calc-btn calc-btn-u3" onclick="egGenerate()">Generar →</button></div>
+    </div>
+    <div id="eg-step2" style="display:none;">
+      <div class="calc-step"><div class="calc-step-label">② Matriz aumentada (A|b)</div>
+        <div class="calc-matrix-hint">Ingresa los coeficientes. La última columna es b.</div>
+        <div id="eg-container"></div>
+      </div>
+      <div class="calc-row" style="margin-top:14px;gap:10px;">
+        <button class="calc-btn calc-btn-u3" onclick="egSolve()">▶ Resolver</button>
+        <button class="calc-btn-secondary" onclick="egExample()">📋 Ejemplo</button>
+        <button class="calc-btn-secondary" onclick="egReset()">↺ Reiniciar</button>
+      </div>
+    </div>
+    <div id="eg-result" style="margin-top:16px;display:none;"></div>
+  </div>
+  <div class="section"><h3>Código Java</h3>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><span style="background:#ff5f56"></span><span style="background:#ffbd2e"></span><span style="background:#27c93f"></span></div><span class="code-lang">Gauss.java</span><button class="copy-btn" onclick="copyCode(this)">⧉ Copiar</button></div>
+      <pre class="code-content"><code><span class="kw">import</span> java.util.Scanner;
+<span class="kw">public class</span> <span class="cls">Gauss</span> {
+    <span class="kw">public static void</span> <span class="fn">main</span>(String[] args) {
+        Scanner sc = <span class="kw">new</span> Scanner(System.in);
+        <span class="kw">int</span> n = sc.nextInt();
+        <span class="kw">double</span>[][] A = <span class="kw">new double</span>[n][n]; <span class="kw">double</span>[] b = <span class="kw">new double</span>[n];
+        <span class="kw">for</span>(<span class="kw">int</span> i=<span class="num">0</span>;i&lt;n;i++) <span class="kw">for</span>(<span class="kw">int</span> j=<span class="num">0</span>;j&lt;n;j++) A[i][j]=sc.nextDouble();
+        <span class="kw">for</span>(<span class="kw">int</span> i=<span class="num">0</span>;i&lt;n;i++) b[i]=sc.nextDouble();
+        <span class="cmt">// Eliminación hacia adelante</span>
+        <span class="kw">for</span>(<span class="kw">int</span> k=<span class="num">0</span>;k&lt;n-<span class="num">1</span>;k++)
+            <span class="kw">for</span>(<span class="kw">int</span> i=k+<span class="num">1</span>;i&lt;n;i++){
+                <span class="kw">double</span> f=A[i][k]/A[k][k];
+                <span class="kw">for</span>(<span class="kw">int</span> j=k;j&lt;n;j++) A[i][j]-=f*A[k][j];
+                b[i]-=f*b[k];
+            }
+        <span class="cmt">// Sustitución hacia atrás</span>
+        <span class="kw">double</span>[] x=<span class="kw">new double</span>[n];
+        <span class="kw">for</span>(<span class="kw">int</span> i=n-<span class="num">1</span>;i>=<span class="num">0</span>;i--){
+            <span class="kw">double</span> s=<span class="num">0</span>;
+            <span class="kw">for</span>(<span class="kw">int</span> j=i+<span class="num">1</span>;j&lt;n;j++) s+=A[i][j]*x[j];
+            x[i]=(b[i]-s)/A[i][i];
+        }
+        <span class="kw">for</span>(<span class="kw">int</span> i=<span class="num">0</span>;i&lt;n;i++) System.out.println(<span class="str">"x"</span>+(i+<span class="num">1</span>)+<span class="str">"="</span>+x[i]);
+    }
+}</code></pre>
+    </div>
+  </div>
+  <div class="tags"><span class="tag" style="color:var(--u3);border-color:rgba(255,107,107,.3);background:rgba(255,107,107,.08)">UNIDAD 3</span><span class="tag">SISTEMAS LINEALES</span><span class="tag">JAVA</span></div>
+</div>
+
+<!-- ═══ U3: GAUSS-JORDAN ═══ -->
+<div class="content-panel" id="panel-gaussjordan">
+  <div class="panel-breadcrumb">UNIDAD 3 <span>›</span> GAUSS-JORDAN</div>
+  <div class="panel-title">Gauss-Jordan</div>
+  <p class="panel-subtitle">Reduce la matriz aumentada a la identidad, obteniendo la solución directamente sin sustitución hacia atrás.</p>
+  <div class="info-grid">
+    <div class="info-card"><div class="info-card-icon">🎯</div><div class="info-card-label">Resultado</div><div class="info-card-value">Matriz Identidad</div></div>
+    <div class="info-card"><div class="info-card-icon">💻</div><div class="info-card-label">Lenguaje</div><div class="info-card-value">Python</div></div>
+  </div>
+  <div class="section"><h3>Fórmulas</h3>
+    <div class="formula">Normalización: A[i][j] = A[i][j] / pivote
+Eliminación:   A[k][j] = A[k][j] − factor·A[i][j]  (k≠i)
+Solución:      x[i] = A[i][n]</div>
+  </div>
+  <div class="section"><h3>Calculadora Interactiva</h3>
+    <div class="calc-step"><div class="calc-step-label">① Tamaño n</div>
+      <div class="calc-row"><input type="number" id="gj-n" class="calc-input-sm" min="1" max="6" value="3"><button class="calc-btn calc-btn-u3" onclick="gjGenerate()">Generar →</button></div>
+    </div>
+    <div id="gj-step2" style="display:none;">
+      <div class="calc-step"><div class="calc-step-label">② Matriz aumentada (A|b)</div>
+        <div class="calc-matrix-hint">Última columna = vector b.</div>
+        <div id="gj-container"></div>
+      </div>
+      <div class="calc-row" style="margin-top:14px;gap:10px;">
+        <button class="calc-btn calc-btn-u3" onclick="gjSolve()">▶ Resolver</button>
+        <button class="calc-btn-secondary" onclick="gjExample()">📋 Ejemplo</button>
+        <button class="calc-btn-secondary" onclick="gjReset()">↺ Reiniciar</button>
+      </div>
+    </div>
+    <div id="gj-steps" style="display:none;margin-top:16px;"></div>
+    <div id="gj-result" style="display:none;margin-top:12px;"></div>
+  </div>
+  <div class="section"><h3>Código Python</h3>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><span style="background:#ff5f56"></span><span style="background:#ffbd2e"></span><span style="background:#27c93f"></span></div><span class="code-lang">GaussJordan.py</span><button class="copy-btn" onclick="copyCode(this)">⧉ Copiar</button></div>
+      <pre class="code-content"><code><span class="kw">def</span> <span class="fn">gauss_jordan</span>(A, b):
+    n = <span class="fn">len</span>(A)
+    <span class="cmt"># Matriz aumentada</span>
+    M = [A[i] + [b[i]] <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(n)]
+    
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(n):
+        pivot = M[i][i]
+        <span class="cmt"># Normalizar fila</span>
+        <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(n + <span class="num">1</span>):
+            M[i][j] /= pivot
+            
+        <span class="cmt"># Eliminación en otras filas</span>
+        <span class="kw">for</span> k <span class="kw">in</span> <span class="fn">range</span>(n):
+            <span class="kw">if</span> k != i:
+                factor = M[k][i]
+                <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(n + <span class="num">1</span>):
+                    M[k][j] -= factor * M[i][j]
+                    
+    <span class="cmt"># Extraer solución</span>
+    <span class="kw">return</span> [M[i][n] <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(n)]</code></pre>
+    </div>
+  </div>
+  <div class="tags"><span class="tag" style="color:var(--u3);border-color:rgba(255,107,107,.3);background:rgba(255,107,107,.08)">UNIDAD 3</span><span class="tag">SISTEMAS LINEALES</span><span class="tag">PYTHON</span></div>
+</div>
+
+<!-- ═══ U3: GAUSS-SEIDEL ═══ -->
+<div class="content-panel" id="panel-seidel">
+  <div class="panel-breadcrumb">UNIDAD 3 <span>›</span> GAUSS-SEIDEL</div>
+  <div class="panel-title">Gauss-Seidel</div>
+  <p class="panel-subtitle">Método iterativo que actualiza cada variable inmediatamente al calcularla, convergiendo más rápido que Jacobi.</p>
+  <div class="info-grid">
+    <div class="info-card"><div class="info-card-icon">⚡</div><div class="info-card-label">Velocidad</div><div class="info-card-value">~2× más rápido que Jacobi</div></div>
+    <div class="info-card"><div class="info-card-icon">💻</div><div class="info-card-label">Lenguaje</div><div class="info-card-value">Java</div></div>
+  </div>
+  <div class="section"><h3>Fórmula</h3>
+    <div class="formula">xᵢ = (bᵢ − Σⱼ≠ᵢ aᵢⱼ·xⱼ) / aᵢᵢ   (actualización inmediata)</div>
+  </div>
+  <div class="section"><h3>Calculadora Interactiva</h3>
+    <div class="calc-step"><div class="calc-step-label">① Tamaño n</div>
+      <div class="calc-row"><input type="number" id="gs-n" class="calc-input-sm" min="1" max="6" value="3"><button class="calc-btn calc-btn-u3" onclick="gsGenerate()">Generar →</button></div>
+    </div>
+    <div id="gs-step2" style="display:none;">
+      <div class="calc-step"><div class="calc-step-label">② Matriz A y vector b</div><div id="gs-container"></div></div>
+      <div class="calc-step" style="margin-top:14px;"><div class="calc-step-label">③ Parámetros</div>
+        <div class="calc-row">
+          <div><div class="matrix-label" style="text-align:left;margin-bottom:6px;">TOLERANCIA</div><input type="number" id="gs-tol" class="calc-input-sm" style="width:110px" value="0.0001" step="any"></div>
+          <div><div class="matrix-label" style="text-align:left;margin-bottom:6px;">MÁX. ITER</div><input type="number" id="gs-maxiter" class="calc-input-sm" style="width:90px" value="50"></div>
+        </div>
+      </div>
+      <div class="calc-row" style="margin-top:14px;gap:10px;">
+        <button class="calc-btn calc-btn-u3" onclick="gsSolve()">▶ Iterar</button>
+        <button class="calc-btn-secondary" onclick="gsExample()">📋 Ejemplo</button>
+        <button class="calc-btn-secondary" onclick="gsReset()">↺ Reiniciar</button>
+      </div>
+    </div>
+    <div id="gs-conv" style="display:none;margin-top:14px;"></div>
+    <div id="gs-iters" style="display:none;margin-top:16px;"></div>
+    <div id="gs-result" style="display:none;margin-top:12px;"></div>
+  </div>
+  <div class="section"><h3>Código Java</h3>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><span style="background:#ff5f56"></span><span style="background:#ffbd2e"></span><span style="background:#27c93f"></span></div><span class="code-lang">GaussSeidel.java</span><button class="copy-btn" onclick="copyCode(this)">⧉ Copiar</button></div>
+      <pre class="code-content"><code><span class="kw">public class</span> <span class="cls">GaussSeidel</span> {
+    <span class="kw">public static</span> <span class="kw">double</span>[] <span class="fn">solve</span>(<span class="kw">double</span>[][] A, <span class="kw">double</span>[] b, <span class="kw">double</span> tol, <span class="kw">int</span> maxIter) {
+        <span class="kw">int</span> n = b.length;
+        <span class="kw">double</span>[] x = <span class="kw">new double</span>[n];
+        <span class="kw">for</span> (<span class="kw">int</span> k = <span class="num">0</span>; k &lt; maxIter; k++) {
+            <span class="kw">double</span> err = <span class="num">0</span>;
+            <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++) {
+                <span class="kw">double</span> s = <span class="num">0</span>;
+                <span class="kw">for</span> (<span class="kw">int</span> j = <span class="num">0</span>; j &lt; n; j++) {
+                    <span class="kw">if</span> (j != i) s += A[i][j] * x[j];
+                }
+                <span class="kw">double</span> xNew = (b[i] - s) / A[i][i];
+                err += Math.abs(xNew - x[i]);
+                x[i] = xNew; <span class="cmt">// Actualización inmediata</span>
+            }
+            <span class="kw">if</span> (err &lt; tol) <span class="kw">break</span>;
+        }
+        <span class="kw">return</span> x;
+    }
+}</code></pre>
+    </div>
+  </div>
+  <div class="tags"><span class="tag" style="color:var(--u3);border-color:rgba(255,107,107,.3);background:rgba(255,107,107,.08)">UNIDAD 3</span><span class="tag">ITERATIVO</span><span class="tag">JAVA</span></div>
+</div>
+
+<!-- ═══ U3: JACOBI ═══ -->
+<div class="content-panel" id="panel-jacobi">
+  <div class="panel-breadcrumb">UNIDAD 3 <span>›</span> JACOBI</div>
+  <div class="panel-title">Método de Jacobi</div>
+  <p class="panel-subtitle">Método iterativo que usa únicamente valores de la iteración anterior para actualizar todas las variables simultáneamente.</p>
+  <div class="info-grid">
+    <div class="info-card"><div class="info-card-icon">🔁</div><div class="info-card-label">Tipo</div><div class="info-card-value">Iterativo simultáneo</div></div>
+    <div class="info-card"><div class="info-card-icon">✅</div><div class="info-card-label">Convergencia</div><div class="info-card-value">Diagonal dominante</div></div>
+    <div class="info-card"><div class="info-card-icon">💻</div><div class="info-card-label">Lenguaje</div><div class="info-card-value">Java</div></div>
+  </div>
+  <div class="section"><h3>Fórmula</h3>
+    <div class="formula">xᵢ⁽ᵏ⁺¹⁾ = (bᵢ − Σⱼ≠ᵢ aᵢⱼ·xⱼ⁽ᵏ⁾) / aᵢᵢ   (valores del paso anterior)</div>
+  </div>
+  <div class="section"><h3>Calculadora Interactiva</h3>
+    <div class="calc-step"><div class="calc-step-label">① Tamaño n</div>
+      <div class="calc-row"><input type="number" id="jac-n" class="calc-input-sm" min="1" max="6" value="3"><button class="calc-btn calc-btn-u3" onclick="jacGenerate()">Generar →</button></div>
+    </div>
+    <div id="jac-step2" style="display:none;">
+      <div class="calc-step"><div class="calc-step-label">② Matriz A y vector b</div><div id="jac-container"></div></div>
+      <div class="calc-step" style="margin-top:14px;"><div class="calc-step-label">③ Parámetros</div>
+        <div class="calc-row">
+          <div><div class="matrix-label" style="text-align:left;margin-bottom:6px;">TOLERANCIA</div><input type="number" id="jac-tol" class="calc-input-sm" style="width:110px" value="0.0001" step="any"></div>
+          <div><div class="matrix-label" style="text-align:left;margin-bottom:6px;">MÁX. ITER</div><input type="number" id="jac-maxiter" class="calc-input-sm" style="width:90px" value="50"></div>
+          <div><div class="matrix-label" style="text-align:left;margin-bottom:6px;">X₀ INICIAL</div><input type="number" id="jac-x0" class="calc-input-sm" style="width:90px" value="0" step="any"></div>
+        </div>
+      </div>
+      <div class="calc-row" style="margin-top:14px;gap:10px;">
+        <button class="calc-btn calc-btn-u3" onclick="jacSolve()">▶ Iterar</button>
+        <button class="calc-btn-secondary" onclick="jacExample()">📋 Ejemplo</button>
+        <button class="calc-btn-secondary" onclick="jacReset()">↺ Reiniciar</button>
+      </div>
+    </div>
+    <div id="jac-conv" style="display:none;margin-top:14px;"></div>
+    <div id="jac-iters" style="display:none;margin-top:16px;"></div>
+    <div id="jac-result" style="display:none;margin-top:12px;"></div>
+  </div>
+  <div class="section"><h3>Código Java</h3>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><span style="background:#ff5f56"></span><span style="background:#ffbd2e"></span><span style="background:#27c93f"></span></div><span class="code-lang">Jacobi.java</span><button class="copy-btn" onclick="copyCode(this)">⧉ Copiar</button></div>
+      <pre class="code-content"><code><span class="kw">public class</span> <span class="cls">Jacobi</span> {
+    <span class="kw">public static</span> <span class="kw">double</span>[] <span class="fn">solve</span>(<span class="kw">double</span>[][] A, <span class="kw">double</span>[] b, <span class="kw">double</span> tol, <span class="kw">int</span> maxIter) {
+        <span class="kw">int</span> n = b.length;
+        <span class="kw">double</span>[] x = <span class="kw">new double</span>[n];
+        <span class="kw">double</span>[] xNew = <span class="kw">new double</span>[n];
+        <span class="kw">for</span> (<span class="kw">int</span> k = <span class="num">0</span>; k &lt; maxIter; k++) {
+            <span class="kw">double</span> err = <span class="num">0</span>;
+            <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++) {
+                <span class="kw">double</span> s = <span class="num">0</span>;
+                <span class="kw">for</span> (<span class="kw">int</span> j = <span class="num">0</span>; j &lt; n; j++) {
+                    <span class="kw">if</span> (j != i) s += A[i][j] * x[j];
+                }
+                xNew[i] = (b[i] - s) / A[i][i];
+                err = Math.max(err, Math.abs(xNew[i] - x[i]));
+            }
+            System.arraycopy(xNew, <span class="num">0</span>, x, <span class="num">0</span>, n); <span class="cmt">// Actualización simultánea</span>
+            <span class="kw">if</span> (err &lt; tol) <span class="kw">break</span>;
+        }
+        <span class="kw">return</span> x;
+    }
+}</code></pre>
+    </div>
+  </div>
+  <div class="tags"><span class="tag" style="color:var(--u3);border-color:rgba(255,107,107,.3);background:rgba(255,107,107,.08)">UNIDAD 3</span><span class="tag">ITERATIVO</span><span class="tag">JAVA</span></div>
+</div>
+
+<!-- ═══ U4: TRES PUNTOS ═══ -->
+<div class="content-panel" id="panel-tresPuntos">
+  <div class="panel-breadcrumb">UNIDAD 4 <span>›</span> FÓRMULA DE TRES PUNTOS</div>
+  <div class="panel-title">Fórmula de Tres Puntos</div>
+  <p class="panel-subtitle">Aproximación de la derivada usando diferencias finitas con tres puntos equidistantes.</p>
+  <div class="info-grid">
+    <div class="info-card"><div class="info-card-icon">📈</div><div class="info-card-label">Orden</div><div class="info-card-value">Error O(h²)</div></div>
+    <div class="info-card"><div class="info-card-icon">🔢</div><div class="info-card-label">Puntos</div><div class="info-card-value">3 equidistantes</div></div>
+  </div>
+  <div class="section"><h3>Fórmulas</h3>
+    <div class="formula">f'(x₀) ≈ [-3f(x₀) + 4f(x₁) - f(x₂)] / (2h)   (extremo izq.)
+f'(x₁) ≈ [f(x₂) - f(x₀)] / (2h)              (punto medio)
+f'(x₂) ≈ [f(x₀) - 4f(x₁) + 3f(x₂)] / (2h)   (extremo der.)</div>
+  </div>
+  <div class="section"><h3>Calculadora</h3>
+    <div class="calc-step"><div class="calc-step-label">Ingresa los tres valores f(x₀), f(x₁), f(x₂) y el paso h</div></div>
+    <div class="calc-row">
+      <div><div class="matrix-label" style="text-align:left;margin-bottom:6px;">f(x₀)</div><input type="number" id="tp-f0" class="calc-input-sm" step="any" placeholder="f₀"></div>
+      <div><div class="matrix-label" style="text-align:left;margin-bottom:6px;">f(x₁)</div><input type="number" id="tp-f1" class="calc-input-sm" step="any" placeholder="f₁"></div>
+      <div><div class="matrix-label" style="text-align:left;margin-bottom:6px;">f(x₂)</div><input type="number" id="tp-f2" class="calc-input-sm" step="any" placeholder="f₂"></div>
+      <div><div class="matrix-label" style="text-align:left;margin-bottom:6px;">h</div><input type="number" id="tp-h" class="calc-input-sm" step="any" placeholder="h" value="0.1"></div>
+    </div>
+    <div class="calc-row" style="margin-top:14px;gap:10px;">
+      <button class="calc-btn calc-btn-u4" onclick="tresPuntosSolve()">▶ Calcular</button>
+      <button class="calc-btn-secondary" onclick="tresPuntosExample()">📋 Ejemplo</button>
+    </div>
+    <div id="tp-result" style="margin-top:16px;display:none;"></div>
+  </div>
+  <div class="tags"><span class="tag" style="color:var(--u4);border-color:rgba(249,115,22,.3);background:rgba(249,115,22,.08)">UNIDAD 4</span><span class="tag">DERIVADAS</span><span class="tag">DIFERENCIAS FINITAS</span></div>
+</div>
+
+<!-- ═══ U4: CINCO PUNTOS ═══ -->
+<div class="content-panel" id="panel-cincoPuntos">
+  <div class="panel-breadcrumb">UNIDAD 4 <span>›</span> FÓRMULA DE CINCO PUNTOS</div>
+  <div class="panel-title">Fórmula de Cinco Puntos</div>
+  <p class="panel-subtitle">Aproximación de la derivada con mayor precisión usando cinco puntos equidistantes. Error de orden O(h⁴).</p>
+  <div class="info-grid">
+    <div class="info-card"><div class="info-card-icon">📈</div><div class="info-card-label">Orden</div><div class="info-card-value">Error O(h⁴)</div></div>
+    <div class="info-card"><div class="info-card-icon">🔢</div><div class="info-card-label">Puntos</div><div class="info-card-value">5 equidistantes</div></div>
+  </div>
+  <div class="section"><h3>Fórmula (punto medio)</h3>
+    <div class="formula">f'(x₂) ≈ [f(x₀) - 8f(x₁) + 8f(x₃) - f(x₄)] / (12h)</div>
+  </div>
+  <div class="section"><h3>Calculadora</h3>
+    <div class="calc-row">
+      <div><div class="matrix-label" style="text-align:left;margin-bottom:6px;">f(x₀)</div><input type="number" id="cp-f0" class="calc-input-sm" step="any" placeholder="f₀"></div>
+      <div><div class="matrix-label" style="text-align:left;margin-bottom:6px;">f(x₁)</div><input type="number" id="cp-f1" class="calc-input-sm" step="any" placeholder="f₁"></div>
+      <div><div class="matrix-label" style="text-align:left;margin-bottom:6px;">f(x₂)</div><input type="number" id="cp-f2" class="calc-input-sm" step="any" placeholder="f₂"></div>
+      <div><div class="matrix-label" style="text-align:left;margin-bottom:6px;">f(x₃)</div><input type="number" id="cp-f3" class="calc-input-sm" step="any" placeholder="f₃"></div>
+      <div><div class="matrix-label" style="text-align:left;margin-bottom:6px;">f(x₄)</div><input type="number" id="cp-f4" class="calc-input-sm" step="any" placeholder="f₄"></div>
+      <div><div class="matrix-label" style="text-align:left;margin-bottom:6px;">h</div><input type="number" id="cp-h" class="calc-input-sm" step="any" placeholder="h" value="0.1"></div>
+    </div>
+    <div class="calc-row" style="margin-top:14px;gap:10px;">
+      <button class="calc-btn calc-btn-u4" onclick="cincoPuntosSolve()">▶ Calcular</button>
+      <button class="calc-btn-secondary" onclick="cincoPuntosExample()">📋 Ejemplo</button>
+    </div>
+    <div id="cp-result" style="margin-top:16px;display:none;"></div>
+  </div>
+  <div class="tags"><span class="tag" style="color:var(--u4);border-color:rgba(249,115,22,.3);background:rgba(249,115,22,.08)">UNIDAD 4</span><span class="tag">DERIVADAS</span><span class="tag">ALTA PRECISIÓN</span></div>
+</div>
+
+<!-- ═══ U4: TRAPECIO ═══ -->
+<div class="content-panel" id="panel-trapecio">
+  <div class="panel-breadcrumb">UNIDAD 4 <span>›</span> REGLA DEL TRAPECIO</div>
+  <div class="panel-title">Regla del Trapecio</div>
+  <p class="panel-subtitle">Aproxima la integral definida usando trapecios bajo la curva. Se puede usar con pocos o muchos subintervalos.</p>
+  <div class="section"><h3>Fórmula</h3>
+    <div class="formula">∫ f(x)dx ≈ (h/2)[f(x₀) + 2f(x₁) + 2f(x₂) + ... + 2f(xₙ₋₁) + f(xₙ)]
+donde h = (b-a)/n</div>
+  </div>
+  <div class="section"><h3>Calculadora</h3>
+    <div class="calc-matrix-hint">Escribe f(x) con notación JavaScript. Ej: Math.sin(x), x*x, Math.exp(x)</div>
+    <div class="calc-step"><div class="calc-step-label">① f(x)</div><input type="text" id="trap-fx" class="calc-input" placeholder="Ej: x*x" value="x*x"></div>
+    <div class="calc-row" style="margin-top:12px;">
+      <div><div class="matrix-label" style="text-align:left;margin-bottom:6px;">a</div><input type="number" id="trap-a" class="calc-input-sm" value="0" step="any"></div>
+      <div><div class="matrix-label" style="text-align:left;margin-bottom:6px;">b</div><input type="number" id="trap-b" class="calc-input-sm" value="1" step="any"></div>
+      <div><div class="matrix-label" style="text-align:left;margin-bottom:6px;">n (subintervalos)</div><input type="number" id="trap-n" class="calc-input-sm" style="width:100px" value="10" min="1"></div>
+    </div>
+    <div class="calc-row" style="margin-top:14px;gap:10px;">
+      <button class="calc-btn calc-btn-u4" onclick="trapecioSolve()">▶ Integrar</button>
+      <button class="calc-btn-secondary" onclick="trapecioExample()">📋 Ejemplo</button>
+    </div>
+    <div id="trap-result" style="margin-top:16px;display:none;"></div>
+  </div>
+  <div class="tags"><span class="tag" style="color:var(--u4);border-color:rgba(249,115,22,.3);background:rgba(249,115,22,.08)">UNIDAD 4</span><span class="tag">INTEGRACIÓN</span><span class="tag">NUMÉRICA</span></div>
+</div>
+
+<!-- ═══ U4: SIMPSON ═══ -->
+<div class="content-panel" id="panel-simpson">
+  <div class="panel-breadcrumb">UNIDAD 4 <span>›</span> REGLA DE SIMPSON</div>
+  <div class="panel-title">Regla de Simpson</div>
+  <p class="panel-subtitle">Aproxima la integral usando parábolas (Simpson 1/3) o cúbicas (Simpson 3/8) en lugar de líneas rectas.</p>
+  <div class="section"><h3>Fórmulas</h3>
+    <div class="formula">Simpson 1/3:  ∫ ≈ (h/3)[f(x₀) + 4f(x₁) + 2f(x₂) + 4f(x₃) + ... + f(xₙ)]  n par
+Simpson 3/8: ∫ ≈ (3h/8)[f(x₀) + 3f(x₁) + 3f(x₂) + 2f(x₃) + ... + f(xₙ)]  n múltiplo de 3</div>
+  </div>
+  <div class="section"><h3>Calculadora</h3>
+    <div class="calc-matrix-hint">f(x) en JavaScript. Ej: Math.sin(x), Math.exp(-x*x)</div>
+    <div class="calc-step"><div class="calc-step-label">① f(x)</div><input type="text" id="simp-fx" class="calc-input" value="Math.sin(x)" placeholder="f(x)"></div>
+    <div class="calc-row" style="margin-top:12px;">
+      <div><div class="matrix-label" style="text-align:left;margin-bottom:6px;">a</div><input type="number" id="simp-a" class="calc-input-sm" value="0" step="any"></div>
+      <div><div class="matrix-label" style="text-align:left;margin-bottom:6px;">b</div><input type="number" id="simp-b" class="calc-input-sm" value="3.14159" step="any"></div>
+      <div><div class="matrix-label" style="text-align:left;margin-bottom:6px;">n (par)</div><input type="number" id="simp-n" class="calc-input-sm" style="width:80px" value="10" min="2"></div>
+      <div><div class="matrix-label" style="text-align:left;margin-bottom:6px;">Regla</div>
+        <select id="simp-rule" class="calc-input-sm" style="width:110px;cursor:pointer;">
+          <option value="13">1/3</option>
+          <option value="38">3/8</option>
+        </select>
+      </div>
+    </div>
+    <div class="calc-row" style="margin-top:14px;gap:10px;">
+      <button class="calc-btn calc-btn-u4" onclick="simpsonSolve()">▶ Integrar</button>
+      <button class="calc-btn-secondary" onclick="simpsonExample()">📋 Ejemplo</button>
+    </div>
+    <div id="simp-result" style="margin-top:16px;display:none;"></div>
+  </div>
+  <div class="tags"><span class="tag" style="color:var(--u4);border-color:rgba(249,115,22,.3);background:rgba(249,115,22,.08)">UNIDAD 4</span><span class="tag">INTEGRACIÓN</span><span class="tag">PARÁBOLAS</span></div>
+</div>
+
+<!-- ═══ U4: DERIVADAS E INTEGRALES ═══ -->
+<div class="content-panel" id="panel-derivInt">
+  <div class="panel-breadcrumb">UNIDAD 4 <span>›</span> DERIVADAS E INTEGRALES</div>
+  <div class="panel-title">Derivadas e Integrales Definidas</div>
+  <p class="panel-subtitle">Calculadora unificada de derivadas numéricas (diferencias finitas) e integrales definidas numéricas para cualquier función.</p>
+  <div class="section"><h3>Fórmulas Usadas</h3>
+    <div class="formula">Derivada centrada:  f'(x) ≈ [f(x+h) - f(x-h)] / (2h)     O(h²)
+Segunda derivada:   f''(x) ≈ [f(x+h) - 2f(x) + f(x-h)] / h²  O(h²)
+Integral (trapecio compuesto): ∫ₐᵇ f dx con n subintervalos</div>
+  </div>
+  <div class="section"><h3>Calculadora de Derivada Numérica</h3>
+    <div class="calc-step"><div class="calc-step-label">f(x)</div><input type="text" id="di-fx" class="calc-input" value="Math.sin(x)" placeholder="f(x)"></div>
+    <div class="calc-row" style="margin-top:12px;">
+      <div><div class="matrix-label" style="text-align:left;margin-bottom:6px;">x₀</div><input type="number" id="di-x0" class="calc-input-sm" value="1" step="any"></div>
+      <div><div class="matrix-label" style="text-align:left;margin-bottom:6px;">h</div><input type="number" id="di-h" class="calc-input-sm" value="0.001" step="any"></div>
+    </div>
+    <button class="calc-btn calc-btn-u4" style="margin-top:12px;" onclick="derivSolve()">▶ Calcular Derivada</button>
+    <div id="di-result" style="margin-top:14px;display:none;"></div>
+  </div>
+  <div class="section"><h3>Calculadora de Integral Definida</h3>
+    <div class="calc-step"><div class="calc-step-label">f(x)</div><input type="text" id="integ-fx" class="calc-input" value="Math.exp(-x*x)" placeholder="f(x)"></div>
+    <div class="calc-row" style="margin-top:12px;">
+      <div><div class="matrix-label" style="text-align:left;margin-bottom:6px;">a</div><input type="number" id="integ-a" class="calc-input-sm" value="0" step="any"></div>
+      <div><div class="matrix-label" style="text-align:left;margin-bottom:6px;">b</div><input type="number" id="integ-b" class="calc-input-sm" value="1" step="any"></div>
+      <div><div class="matrix-label" style="text-align:left;margin-bottom:6px;">n</div><input type="number" id="integ-n" class="calc-input-sm" value="1000" min="1"></div>
+    </div>
+    <button class="calc-btn calc-btn-u4" style="margin-top:12px;" onclick="integSolve()">▶ Calcular Integral</button>
+    <div id="integ-result" style="margin-top:14px;display:none;"></div>
+  </div>
+  <div class="tags"><span class="tag" style="color:var(--u4);border-color:rgba(249,115,22,.3);background:rgba(249,115,22,.08)">UNIDAD 4</span><span class="tag">DERIVADAS</span><span class="tag">INTEGRALES</span></div>
+</div>
+
+<!-- ═══ U4: CUADRATURA GAUSSIANA ═══ -->
+<div class="content-panel" id="panel-cuadratura">
+  <div class="panel-breadcrumb">UNIDAD 4 <span>›</span> CUADRATURA GAUSSIANA</div>
+  <div class="panel-title">Cuadratura Gaussiana</div>
+  <p class="panel-subtitle">Método de integración numérica que usa puntos y pesos especiales (nodos de Gauss-Legendre) para máxima precisión con pocos puntos.</p>
+  <div class="section"><h3>Fórmula General</h3>
+    <div class="formula">∫₋₁¹ f(t) dt ≈ Σ wᵢ·f(tᵢ)
+Cambio de variable: ∫ₐᵇ f(x) dx = (b-a)/2 · Σ wᵢ·f((b-a)/2·tᵢ + (a+b)/2)</div>
+  </div>
+  <div class="section"><h3>Calculadora</h3>
+    <div class="calc-step"><div class="calc-step-label">① f(x)</div><input type="text" id="cg-fx" class="calc-input" value="Math.exp(-x*x)" placeholder="f(x)"></div>
+    <div class="calc-row" style="margin-top:12px;">
+      <div><div class="matrix-label" style="text-align:left;margin-bottom:6px;">a</div><input type="number" id="cg-a" class="calc-input-sm" value="0" step="any"></div>
+      <div><div class="matrix-label" style="text-align:left;margin-bottom:6px;">b</div><input type="number" id="cg-b" class="calc-input-sm" value="1" step="any"></div>
+      <div><div class="matrix-label" style="text-align:left;margin-bottom:6px;">Puntos (n)</div>
+        <select id="cg-n" class="calc-input-sm" style="width:90px;cursor:pointer;">
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5" selected>5</option>
+        </select>
+      </div>
+    </div>
+    <div class="calc-row" style="margin-top:14px;gap:10px;">
+      <button class="calc-btn calc-btn-u4" onclick="cuadraturaSolve()">▶ Integrar</button>
+      <button class="calc-btn-secondary" onclick="cuadraturaExample()">📋 Ejemplo</button>
+    </div>
+    <div id="cg-result" style="margin-top:16px;display:none;"></div>
+  </div>
+  <div class="tags"><span class="tag" style="color:var(--u4);border-color:rgba(249,115,22,.3);background:rgba(249,115,22,.08)">UNIDAD 4</span><span class="tag">CUADRATURA</span><span class="tag">GAUSS-LEGENDRE</span></div>
+</div>
+
+<!-- ═══ U5: LAGRANGE ═══ -->
+<div class="content-panel" id="panel-lagrange">
+  <div class="panel-breadcrumb">UNIDAD 5 <span>›</span> POLINOMIAL DE LAGRANGE</div>
+  <div class="panel-title">Polinomial de Lagrange</div>
+  <p class="panel-subtitle">Construye un polinomio único que pasa por todos los puntos dados, usando bases de Lagrange para interpolación.</p>
+  <div class="section"><h3>Fórmula</h3>
+    <div class="formula">P(x) = Σᵢ yᵢ · Lᵢ(x)
+Lᵢ(x) = Π_{j≠i} (x − xⱼ) / (xᵢ − xⱼ)</div>
+  </div>
+  <div class="section"><h3>Calculadora</h3>
+    <div class="calc-matrix-hint">Ingresa los puntos conocidos separados por comas. Ej: 1,2,3 y sus f(x): 2,4,8</div>
+    <div class="calc-step"><div class="calc-step-label">① Valores de x (separados por comas)</div><input type="text" id="lag-xs" class="calc-input" placeholder="Ej: 1, 2, 3, 4" value="1, 2, 3, 4"></div>
+    <div class="calc-step"><div class="calc-step-label">② Valores de y = f(x) (separados por comas)</div><input type="text" id="lag-ys" class="calc-input" placeholder="Ej: 2, 4, 8, 16" value="2, 4, 8, 16"></div>
+    <div class="calc-step"><div class="calc-step-label">③ Valor a interpolar (x)</div><input type="number" id="lag-xp" class="calc-input-sm" style="width:140px" value="2.5" step="any"></div>
+    <div class="calc-row" style="margin-top:14px;gap:10px;">
+      <button class="calc-btn calc-btn-u5" onclick="lagrangeSolve()">▶ Interpolar</button>
+      <button class="calc-btn-secondary" onclick="lagrangeExample()">📋 Ejemplo</button>
+    </div>
+    <div id="lag-result" style="margin-top:16px;display:none;"></div>
+  </div>
+  <div class="tags"><span class="tag" style="color:var(--u5);border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.08)">UNIDAD 5</span><span class="tag">INTERPOLACIÓN</span><span class="tag">POLINOMIOS</span></div>
+</div>
+
+<!-- ═══ U5: MÍNIMOS CUADRADOS ═══ -->
+<div class="content-panel" id="panel-minCuad">
+  <div class="panel-breadcrumb">UNIDAD 5 <span>›</span> MÍNIMOS CUADRADOS</div>
+  <div class="panel-title">Mínimos Cuadrados Lineales</div>
+  <p class="panel-subtitle">Ajusta la recta y = a + bx que minimiza la suma de los cuadrados de los residuos para un conjunto de puntos.</p>
+  <div class="section"><h3>Fórmulas</h3>
+    <div class="formula">b = (n·Σxy − Σx·Σy) / (n·Σx² − (Σx)²)
+a = (Σy − b·Σx) / n
+R² = 1 − SSres/SStot  (coeficiente de determinación)</div>
+  </div>
+  <div class="section"><h3>Calculadora</h3>
+    <div class="calc-step"><div class="calc-step-label">① Valores de x (separados por comas)</div><input type="text" id="mc-xs" class="calc-input" placeholder="Ej: 1, 2, 3, 4, 5" value="1, 2, 3, 4, 5"></div>
+    <div class="calc-step"><div class="calc-step-label">② Valores de y (separados por comas)</div><input type="text" id="mc-ys" class="calc-input" placeholder="Ej: 2.1, 3.9, 6.2, 7.8, 10.1" value="2.1, 3.9, 6.2, 7.8, 10.1"></div>
+    <div class="calc-row" style="margin-top:14px;gap:10px;">
+      <button class="calc-btn calc-btn-u5" onclick="minCuadSolve()">▶ Ajustar</button>
+      <button class="calc-btn-secondary" onclick="minCuadExample()">📋 Ejemplo</button>
+    </div>
+    <div id="mc-result" style="margin-top:16px;display:none;"></div>
+  </div>
+  <div class="tags"><span class="tag" style="color:var(--u5);border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.08)">UNIDAD 5</span><span class="tag">REGRESIÓN</span><span class="tag">AJUSTE DE CURVAS</span></div>
+</div>
+
+</main>
+</div><!-- end .main -->
+
+<footer>
+  <span>© 2026 MÉTODOS NUMÉRICOS — CURSO UNIVERSITARIO</span>
+  <span>5 UNIDADES · 17 MÉTODOS</span>
+</footer>
+
+<script>
+// ════ NAVEGACIÓN ════
+function toggleUnit(id) {
+  const u = document.getElementById(id);
+  const was = u.classList.contains('active');
+  document.querySelectorAll('.unit').forEach(x => x.classList.remove('active'));
+  if (!was) u.classList.add('active');
+}
+function showPanel(id, el) {
+  document.querySelectorAll('.content-panel').forEach(p => p.classList.remove('active'));
+  const p = document.getElementById('panel-' + id);
+  if (p) p.classList.add('active');
+  document.querySelectorAll('.topic-item').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+}
+function copyCode(btn) {
+  const code = btn.closest('.code-block').querySelector('code').innerText;
+  navigator.clipboard.writeText(code).then(() => { btn.textContent = '✓ Copiado'; setTimeout(() => btn.textContent = '⧉ Copiar', 2000); });
+}
+
+// ════ HELPERS ════
+function evalFx(expr, x) {
+  try { return Function('x', '"use strict"; return (' + expr + ')')(x); }
+  catch(e) { return NaN; }
+}
+function showResult(id, html) {
+  const el = document.getElementById(id);
+  el.innerHTML = html; el.style.display = 'block';
+}
+function errBox(id, msg) { showResult(id, `<div class="error-box">⚠ ${msg}</div>`); }
+function infoBox(content) { return `<div class="info-result">${content}</div>`; }
+function okBox(content) { return `<div class="ok-box">${content}</div>`; }
+function resultBox(title, rows, extra='') {
+  let r = rows.map(([lbl,val]) => `<div class="result-row"><span class="result-var">${lbl}</span><div class="result-bar"><div class="result-bar-fill" style="width:60%"></div></div><span class="result-val">${val}</span></div>`).join('');
+  return `<div class="result-box"><div class="result-box-title">✓ ${title}</div>${r}${extra}</div>`;
+}
+
+// Matrix builder helper
+function buildMatrix(prefix, n, container) {
+  container.innerHTML = '';
+  const labelRow = document.createElement('div'); labelRow.className = 'matrix-row'; labelRow.style.marginBottom = '2px';
+  for (let j = 0; j <= n; j++) {
+    if (j === n - 1) { const l = document.createElement('div'); l.className='matrix-label'; l.style.width='72px'; l.textContent=`a${j+1}`; labelRow.appendChild(l); const sp=document.createElement('div'); sp.style.width='20px'; labelRow.appendChild(sp); continue; }
+    const l = document.createElement('div'); l.className='matrix-label'; l.style.width='72px'; l.textContent = j===n?'b':`a${j+1}`; labelRow.appendChild(l);
+  }
+  container.appendChild(labelRow);
+  const grid = document.createElement('div'); grid.className = 'matrix-grid';
+  for (let i = 0; i < n; i++) {
+    const row = document.createElement('div'); row.className = 'matrix-row';
+    for (let j = 0; j <= n; j++) {
+      if (j === n) { const s=document.createElement('span'); s.className='matrix-sep'; s.textContent='|'; row.appendChild(s); }
+      const inp = document.createElement('input'); inp.type='number'; inp.step='any';
+      inp.className = 'matrix-cell' + (j===n?' b-col':'');
+      inp.id = `${prefix}-${i}-${j}`; inp.placeholder = j===n?'b':(i===j?'★':'0');
+      row.appendChild(inp);
+    }
+    grid.appendChild(row);
+  }
+  container.appendChild(grid);
+}
+function readMatrix(prefix, n) {
+  const A=[], b=[];
+  for (let i=0;i<n;i++) {
+    const row=[];
+    for (let j=0;j<n;j++) {
+      const v=parseFloat(document.getElementById(`${prefix}-${i}-${j}`)?.value);
+      if (isNaN(v)) return null;
+      row.push(v);
+    }
+    A.push(row);
+    const bv=parseFloat(document.getElementById(`${prefix}-${i}-${n}`)?.value);
+    if (isNaN(bv)) return null;
+    b.push(bv);
+  }
+  return {A,b};
+}
+function fillMatrix(prefix, vals) {
+  const n = vals.length;
+  for (let i=0;i<n;i++) for (let j=0;j<=n;j++) {
+    const el=document.getElementById(`${prefix}-${i}-${j}`);
+    if (el) el.value=vals[i][j];
+  }
+}
+function diagDom(A,n){for(let i=0;i<n;i++){let s=0;for(let j=0;j<n;j++)if(j!==i)s+=Math.abs(A[i][j]);if(Math.abs(A[i][i])<s)return false;}return true;}
+function iterTable(headers, rows) {
+  let th=headers.map(h=>`<th>${h}</th>`).join('');
+  let tr=rows.map(r=>`<tr>${r.map((c,i)=>`<td${i===0?' style="text-align:center;color:var(--accent2);font-weight:700"':''}>${c}</td>`).join('')}</tr>`).join('');
+  return `<div style="overflow-x:auto;margin-top:12px;"><table class="iter-table"><thead><tr>${th}</tr></thead><tbody>${tr}</tbody></table></div>`;
+}
+function solvResults(x, converged, iters, extra='') {
+  const mx=Math.max(...x.map(Math.abs));
+  let rows=x.map((v,i)=>{const bw=mx>0?Math.min(100,(Math.abs(v)/mx)*100):50;return`<div class="result-row"><span class="result-var">x${i+1}</span><div class="result-bar"><div class="result-bar-fill" style="width:${bw}%"></div></div><span class="result-val">= ${v.toFixed(8)}</span></div>`;}).join('');
+  const st=converged?`<span style="color:var(--accent3)">✓ Convergió en ${iters} iteración${iters>1?'es':''}</span>`:`<span style="color:#ffbd2e">⚠ Máx. iteraciones alcanzado</span>`;
+  return `<div class="result-box"><div class="result-box-title">${st}</div>${rows}${extra}</div>`;
+}
+
+// ════ U1: ERRORES ════
+function calcErrAbs() {
+  const vv=parseFloat(document.getElementById('ea-vv').value), va=parseFloat(document.getElementById('ea-va').value);
+  if(isNaN(vv)||isNaN(va)) return errBox('ea-result','Ingresa ambos valores.');
+  const ea=Math.abs(vv-va);
+  showResult('ea-result', resultBox('Error Absoluto',[['Valor verdadero',vv],['Valor aproximado',va],['Error Absoluto (Ea)',ea.toFixed(10)]]));
+}
+function calcErrRel() {
+  const vv=parseFloat(document.getElementById('er-vv').value), va=parseFloat(document.getElementById('er-va').value);
+  if(isNaN(vv)||isNaN(va)) return errBox('er-result','Ingresa ambos valores.');
+  if(Math.abs(vv)<1e-15) return errBox('er-result','El valor verdadero no puede ser 0.');
+  const ea=Math.abs(vv-va), er=ea/Math.abs(vv);
+  showResult('er-result', resultBox('Error Relativo',[['Error Absoluto',ea.toFixed(10)],['Error Relativo (Er)',er.toFixed(10)]]));
+}
+function calcErrPct() {
+  const vv=parseFloat(document.getElementById('ep-vv').value), va=parseFloat(document.getElementById('ep-va').value);
+  if(isNaN(vv)||isNaN(va)) return errBox('ep-result','Ingresa ambos valores.');
+  if(Math.abs(vv)<1e-15) return errBox('ep-result','El valor verdadero no puede ser 0.');
+  const ea=Math.abs(vv-va), ep=(ea/Math.abs(vv))*100;
+  showResult('ep-result', resultBox('Error Porcentual',[['Error Absoluto',ea.toFixed(10)],['Error Porcentual (Ep)',ep.toFixed(6)+'%']]));
+}
+
+// ════ U2: BISECCIÓN ════
+function biseccionExample(){document.getElementById('bis-fx').value='Math.pow(x,3)-x-2';document.getElementById('bis-a').value=1;document.getElementById('bis-b').value=2;}
+function biseccionSolve(){
+  const expr=document.getElementById('bis-fx').value;
+  let a=parseFloat(document.getElementById('bis-a').value), b=parseFloat(document.getElementById('bis-b').value);
+  const tol=parseFloat(document.getElementById('bis-tol').value)||0.0001, maxI=parseInt(document.getElementById('bis-maxiter').value)||50;
+  const f=x=>evalFx(expr,x);
+  if(isNaN(a)||isNaN(b)) return errBox('bis-result','Ingresa a y b válidos.');
+  if(f(a)*f(b)>0) return errBox('bis-result','f(a)·f(b) > 0: no hay garantía de raíz en el intervalo.');
+  const hdrs=['Iter','Xl','Xu','Xr','f(Xr)','Error'];
+  const trs=[]; let xrOld=a, conv=false, fi=maxI;
+  for(let k=0;k<maxI;k++){
+    const xr=(a+b)/2, fxr=f(xr), err=k===0?100:Math.abs((xr-xrOld)/xr)*100;
+    trs.push([k+1,a.toFixed(6),b.toFixed(6),xr.toFixed(6),fxr.toFixed(6),err.toFixed(4)+'%']);
+    if(Math.abs(fxr)<1e-14||err<tol*100){conv=true;fi=k+1;a=xr;break;}
+    if(f(a)*fxr<0) b=xr; else a=xr;
+    xrOld=xr;
+  }
+  const xr=(a+b)/2;
+  showResult('bis-result',resultBox(`Raíz encontrada`,[['Raíz Xr',xr.toFixed(10)],['f(Xr)',f(xr).toExponential(4)],['Iteraciones',conv?fi:'≥'+maxI]])+iterTable(hdrs,trs));
+}
+
+// ════ U2: FALSA POSICIÓN ════
+function falsaExample(){document.getElementById('fp-fx').value='Math.exp(x)-3*x';document.getElementById('fp-a').value=1;document.getElementById('fp-b').value=2;}
+function falsaPosicionSolve(){
+  const expr=document.getElementById('fp-fx').value;
+  let a=parseFloat(document.getElementById('fp-a').value), b=parseFloat(document.getElementById('fp-b').value);
+  const tol=parseFloat(document.getElementById('fp-tol').value)||0.0001, maxI=parseInt(document.getElementById('fp-maxiter').value)||50;
+  const f=x=>evalFx(expr,x);
+  if(isNaN(a)||isNaN(b)) return errBox('fp-result','Ingresa a y b válidos.');
+  if(f(a)*f(b)>0) return errBox('fp-result','f(a)·f(b) > 0: no hay raíz garantizada.');
+  const hdrs=['Iter','a','b','Xr','f(Xr)','Error']; const trs=[]; let xrOld=a, conv=false, fi=maxI, xr=a;
+  for(let k=0;k<maxI;k++){
+    const fa=f(a), fb=f(b);
+    xr=b-fb*(a-b)/(fa-fb);
+    const fxr=f(xr), err=k===0?100:Math.abs((xr-xrOld)/xr)*100;
+    trs.push([k+1,a.toFixed(6),b.toFixed(6),xr.toFixed(6),fxr.toFixed(6),err.toFixed(4)+'%']);
+    if(Math.abs(fxr)<1e-14||err<tol*100){conv=true;fi=k+1;break;}
+    if(fa*fxr<0) b=xr; else a=xr;
+    xrOld=xr;
+  }
+  showResult('fp-result',resultBox('Raíz encontrada',[['Raíz Xr',xr.toFixed(10)],['f(Xr)',f(xr).toExponential(4)],['Iteraciones',conv?fi:'≥'+maxI]])+iterTable(hdrs,trs));
+}
+
+// ════ U3: ELIMINACIÓN GAUSSIANA ════
+function egGenerate(){const n=parseInt(document.getElementById('eg-n').value);if(!n||n<1||n>6)return alert('1-6');buildMatrix('eg',n,document.getElementById('eg-container'));document.getElementById('eg-step2').style.display='block';document.getElementById('eg-result').style.display='none';}
+function egReset(){document.getElementById('eg-step2').style.display='none';document.getElementById('eg-result').style.display='none';}
+function egExample(){document.getElementById('eg-n').value=3;egGenerate();setTimeout(()=>fillMatrix('eg',[[2,1,-1,8],[-3,-1,2,-11],[-2,1,2,-3]]),30);}
+function egSolve(){
+  const n=parseInt(document.getElementById('eg-n').value), d=readMatrix('eg',n);
+  if(!d) return errBox('eg-result','Completa todos los campos.');
+  const {A,b}=d;
+  for(let k=0;k<n-1;k++) for(let i=k+1;i<n;i++){if(Math.abs(A[k][k])<1e-12)return errBox('eg-result',`Pivote cero en fila ${k+1}.`);const f=A[i][k]/A[k][k];for(let j=k;j<n;j++)A[i][j]-=f*A[k][j];b[i]-=f*b[k];}
+  const x=new Array(n);
+  for(let i=n-1;i>=0;i--){let s=0;for(let j=i+1;j<n;j++)s+=A[i][j]*x[j];x[i]=(b[i]-s)/A[i][i];}
+  showResult('eg-result',solvResults(x,true,n,''));
+}
+
+// ════ U3: GAUSS-JORDAN ════
+function gjGenerate(){const n=parseInt(document.getElementById('gj-n').value);if(!n||n<1||n>6)return alert('1-6');buildMatrix('gj',n,document.getElementById('gj-container'));document.getElementById('gj-step2').style.display='block';document.getElementById('gj-steps').style.display='none';document.getElementById('gj-result').style.display='none';}
+function gjReset(){document.getElementById('gj-step2').style.display='none';document.getElementById('gj-steps').style.display='none';document.getElementById('gj-result').style.display='none';}
+function gjExample(){document.getElementById('gj-n').value=3;gjGenerate();setTimeout(()=>fillMatrix('gj',[[2,1,-1,8],[-3,-1,2,-11],[-2,1,2,-3]]),30);}
+function gjFmtMat(A,n,pr){let h='';for(let i=0;i<n;i++){let r='  [ ';for(let j=0;j<n;j++)r+=A[i][j].toFixed(4).padStart(9)+'  ';r+='| '+A[i][n].toFixed(4).padStart(9)+' ]';h+=i===pr?`<span class="pivot-row">${r}</span>\n`:r+'\n';}return h;}
+function gjSolve(){
+  const n=parseInt(document.getElementById('gj-n').value), d=readMatrix('gj',n);
+  if(!d) return errBox('gj-result','Completa todos los campos.');
+  const A=d.A.map((r,i)=>[...r,d.b[i]]);
+  const sc=document.getElementById('gj-steps'); sc.innerHTML=''; sc.style.display='block';
+  for(let i=0;i<n;i++){
+    if(Math.abs(A[i][i])<1e-12)return errBox('gj-result',`Pivote cero fila ${i+1}.`);
+    const pv=A[i][i]; for(let j=0;j<=n;j++)A[i][j]/=pv;
+    for(let k=0;k<n;k++){if(k!==i){const f=A[k][i];for(let j=0;j<=n;j++)A[k][j]-=f*A[i][j];}}
+    const it=document.createElement('div'); it.className='gj-iteration';
+    it.innerHTML=`<div class="gj-iter-title">Iteración ${i+1} — Pivote fila ${i+1}</div><div class="gj-matrix-display">${gjFmtMat(A,n,i)}</div>`;
+    sc.appendChild(it);
+  }
+  const x=A.map(r=>r[n]);
+  showResult('gj-result',solvResults(x,true,n,''));
+}
+
+// ════ U3: GAUSS-SEIDEL ════
+function gsGenerate(){const n=parseInt(document.getElementById('gs-n').value);if(!n||n<1||n>6)return alert('1-6');buildMatrix('gs',n,document.getElementById('gs-container'));document.getElementById('gs-step2').style.display='block';['gs-conv','gs-iters','gs-result'].forEach(id=>{const e=document.getElementById(id);e.style.display='none';e.innerHTML='';});}
+function gsReset(){document.getElementById('gs-step2').style.display='none';['gs-conv','gs-iters','gs-result'].forEach(id=>{const e=document.getElementById(id);e.style.display='none';e.innerHTML='';});}
+function gsExample(){document.getElementById('gs-n').value=3;gsGenerate();setTimeout(()=>fillMatrix('gs',[[10,-1,2,6],[-1,11,-1,25],[2,-1,10,-11]]),30);}
+function gsSolve(){
+  const n=parseInt(document.getElementById('gs-n').value), d=readMatrix('gs',n);
+  if(!d) return errBox('gs-result','Completa todos los campos.');
+  const {A,b}=d, tol=parseFloat(document.getElementById('gs-tol').value)||0.0001, maxI=parseInt(document.getElementById('gs-maxiter').value)||50;
+  for(let i=0;i<n;i++) if(Math.abs(A[i][i])<1e-12) return errBox('gs-result',`Diagonal A[${i+1}][${i+1}]=0.`);
+  const dd=diagDom(A,n);
+  const cv=document.getElementById('gs-conv'); cv.style.display='block';
+  cv.innerHTML=dd?`<div class="ok-box">✓ Diagonal dominante — Convergencia garantizada</div>`:`<div class="warn-box">⚠ NO diagonal dominante — puede no converger</div>`;
+  const x=new Array(n).fill(0); const hdrs=['Iter',...Array.from({length:n},(_,i)=>`x${i+1}`),'Error']; const trs=[]; let conv=false, fi=maxI;
+  for(let k=0;k<maxI;k++){
+    let err=0;
+    for(let i=0;i<n;i++){let s=0;for(let j=0;j<n;j++)if(j!==i)s+=A[i][j]*x[j];const xn=(b[i]-s)/A[i][i];err+=Math.abs(xn-x[i]);x[i]=xn;}
+    const ec=err<tol?'color:var(--accent3);font-weight:700':err<tol*100?'color:#ffbd2e':'';
+    if(k<20||err<tol) trs.push([k+1,...x.map(v=>v.toFixed(5)),`<span style="${ec}">${err.toExponential(3)}</span>`]);
+    else if(k===20) trs.push(['...','...','...','...','...']);
+    if(err<tol){conv=true;fi=k+1;break;}
+  }
+  const it=document.getElementById('gs-iters'); it.style.display='block'; it.innerHTML=iterTable(hdrs,trs);
+  const t0=performance.now(); const elapsed=((performance.now()-t0)*1e6).toFixed(0);
+  showResult('gs-result',solvResults(x,conv,fi,`<div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.06);font-family:'Space Mono',monospace;font-size:.7rem;color:var(--text-muted)">⏱ Tiempo ≈ <span style="color:var(--accent)">${elapsed} ns</span></div>`));
+}
+
+// ════ U3: JACOBI ════
+function jacGenerate(){const n=parseInt(document.getElementById('jac-n').value);if(!n||n<1||n>6)return alert('1-6');buildMatrix('jac',n,document.getElementById('jac-container'));document.getElementById('jac-step2').style.display='block';['jac-conv','jac-iters','jac-result'].forEach(id=>{const e=document.getElementById(id);e.style.display='none';e.innerHTML='';});}
+function jacReset(){document.getElementById('jac-step2').style.display='none';['jac-conv','jac-iters','jac-result'].forEach(id=>{const e=document.getElementById(id);e.style.display='none';e.innerHTML='';});}
+function jacExample(){document.getElementById('jac-n').value=3;jacGenerate();setTimeout(()=>fillMatrix('jac',[[10,-1,2,6],[-1,11,-1,25],[2,-1,10,-11]]),30);}
+function jacSolve(){
+  const n=parseInt(document.getElementById('jac-n').value), d=readMatrix('jac',n);
+  if(!d) return errBox('jac-result','Completa todos los campos.');
+  const {A,b}=d, tol=parseFloat(document.getElementById('jac-tol').value)||0.0001, maxI=parseInt(document.getElementById('jac-maxiter').value)||50, x0=parseFloat(document.getElementById('jac-x0').value)||0;
+  for(let i=0;i<n;i++) if(Math.abs(A[i][i])<1e-12) return errBox('jac-result',`Diagonal A[${i+1}][${i+1}]=0.`);
+  const dd=diagDom(A,n);
+  const cv=document.getElementById('jac-conv'); cv.style.display='block';
+  cv.innerHTML=dd?`<div class="ok-box">✓ Diagonal dominante — Convergencia garantizada</div>`:`<div class="warn-box">⚠ NO diagonal dominante</div>`;
+  let x=new Array(n).fill(x0); const hdrs=['Iter',...Array.from({length:n},(_,i)=>`x${i+1}`),'Err. Máx.']; const trs=[]; let conv=false, fi=maxI;
+  for(let k=0;k<maxI;k++){
+    const xn=new Array(n);
+    for(let i=0;i<n;i++){let s=0;for(let j=0;j<n;j++)if(j!==i)s+=A[i][j]*x[j];xn[i]=(b[i]-s)/A[i][i];}
+    const err=Math.max(...xn.map((v,i)=>Math.abs(v-x[i])));
+    const ec=err<tol?'color:var(--accent3);font-weight:700':err<tol*100?'color:#ffbd2e':'';
+    if(k<20||err<tol) trs.push([k+1,...xn.map(v=>v.toFixed(5)),`<span style="${ec}">${err.toExponential(3)}</span>`]);
+    else if(k===20) trs.push(['...','...','...','...','...']);
+    x=[...xn];
+    if(err<tol){conv=true;fi=k+1;break;}
+  }
+  const it=document.getElementById('jac-iters'); it.style.display='block'; it.innerHTML=iterTable(hdrs,trs);
+  showResult('jac-result',solvResults(x,conv,fi,''));
+}
+
+// ════ U4: TRES PUNTOS ════
+function tresPuntosExample(){document.getElementById('tp-f0').value=0;document.getElementById('tp-f1').value=0.841471;document.getElementById('tp-f2').value=0.909297;document.getElementById('tp-h').value=0.1;}
+function tresPuntosSolve(){
+  const f0=parseFloat(document.getElementById('tp-f0').value), f1=parseFloat(document.getElementById('tp-f1').value), f2=parseFloat(document.getElementById('tp-f2').value), h=parseFloat(document.getElementById('tp-h').value);
+  if([f0,f1,f2,h].some(isNaN)) return errBox('tp-result','Completa todos los campos.');
+  if(h===0) return errBox('tp-result','h no puede ser 0.');
+  const dLeft=(-3*f0+4*f1-f2)/(2*h), dMid=(f2-f0)/(2*h), dRight=(f0-4*f1+3*f2)/(2*h);
+  showResult('tp-result', resultBox('Derivadas por 3 Puntos',[["f'(x₀) extremo izq.",dLeft.toFixed(8)],["f'(x₁) punto medio",dMid.toFixed(8)],["f'(x₂) extremo der.",dRight.toFixed(8)]]));
+}
+
+// ════ U4: CINCO PUNTOS ════
+function cincoPuntosExample(){[0,0.841471,0.909297,0.141120,-0.756802].forEach((v,i)=>document.getElementById(`cp-f${i}`).value=v);document.getElementById('cp-h').value=0.1;}
+function cincoPuntosSolve(){
+  const f0=parseFloat(document.getElementById('cp-f0').value), f1=parseFloat(document.getElementById('cp-f1').value), f2=parseFloat(document.getElementById('cp-f2').value), f3=parseFloat(document.getElementById('cp-f3').value), f4=parseFloat(document.getElementById('cp-f4').value), h=parseFloat(document.getElementById('cp-h').value);
+  if([f0,f1,f2,f3,f4,h].some(isNaN)) return errBox('cp-result','Completa todos los campos.');
+  const dMid=(f0-8*f1+8*f3-f4)/(12*h);
+  showResult('cp-result', resultBox("Derivada por 5 Puntos",[["f'(x₂) punto medio",dMid.toFixed(10)],['Orden del error','O(h⁴)'],['h usado',h]]));
+}
+
+// ════ U4: TRAPECIO ════
+function trapecioExample(){document.getElementById('trap-fx').value='x*x';document.getElementById('trap-a').value=0;document.getElementById('trap-b').value=1;document.getElementById('trap-n').value=10;}
+function trapecioSolve(){
+  const expr=document.getElementById('trap-fx').value;
+  const a=parseFloat(document.getElementById('trap-a').value), b=parseFloat(document.getElementById('trap-b').value), n=parseInt(document.getElementById('trap-n').value);
+  if(isNaN(a)||isNaN(b)||!n) return errBox('trap-result','Completa todos los campos.');
+  const h=(b-a)/n, f=x=>evalFx(expr,x);
+  let s=f(a)+f(b);
+  for(let i=1;i<n;i++) s+=2*f(a+i*h);
+  const I=(h/2)*s;
+  showResult('trap-result', resultBox('Integral por Trapecio',[['∫ f(x)dx',I.toFixed(10)],['n subintervalos',n],['h',(h).toFixed(6)]]));
+}
+
+// ════ U4: SIMPSON ════
+function simpsonExample(){document.getElementById('simp-fx').value='Math.sin(x)';document.getElementById('simp-a').value=0;document.getElementById('simp-b').value=Math.PI.toFixed(6);document.getElementById('simp-n').value=10;}
+function simpsonSolve(){
+  const expr=document.getElementById('simp-fx').value;
+  const a=parseFloat(document.getElementById('simp-a').value), b=parseFloat(document.getElementById('simp-b').value);
+  let n=parseInt(document.getElementById('simp-n').value);
+  const rule=document.getElementById('simp-rule').value;
+  if(isNaN(a)||isNaN(b)||!n) return errBox('simp-result','Completa todos los campos.');
+  const f=x=>evalFx(expr,x);
+  let I;
+  if(rule==='13'){
+    if(n%2!==0) n++;
+    const h=(b-a)/n; let s=f(a)+f(b);
+    for(let i=1;i<n;i++) s+=(i%2===0?2:4)*f(a+i*h);
+    I=(h/3)*s;
+  } else {
+    if(n%3!==0) n=Math.ceil(n/3)*3;
+    const h=(b-a)/n; let s=f(a)+f(b);
+    for(let i=1;i<n;i++) s+=(i%3===0?2:3)*f(a+i*h);
+    I=(3*h/8)*s;
+  }
+  showResult('simp-result', resultBox('Integral por Simpson',[['∫ f(x)dx',I.toFixed(10)],['Regla usada','Simpson '+rule.replace('13','1/3').replace('38','3/8')],['n',n]]));
+}
+
+// ════ U4: DERIVADAS E INTEGRALES ════
+function derivSolve(){
+  const expr=document.getElementById('di-fx').value, x0=parseFloat(document.getElementById('di-x0').value), h=parseFloat(document.getElementById('di-h').value);
+  if(isNaN(x0)||isNaN(h)||h===0) return errBox('di-result','Valores inválidos.');
+  const f=x=>evalFx(expr,x);
+  const d1=(f(x0+h)-f(x0-h))/(2*h), d2=(f(x0+h)-2*f(x0)+f(x0-h))/(h*h);
+  showResult('di-result', resultBox("Derivadas Numéricas en x₀",[["f(x₀)",f(x0).toFixed(10)],["f'(x₀) centrada",d1.toFixed(10)],["f''(x₀)",d2.toFixed(10)],["h usado",h]]));
+}
+function integSolve(){
+  const expr=document.getElementById('integ-fx').value;
+  const a=parseFloat(document.getElementById('integ-a').value), b=parseFloat(document.getElementById('integ-b').value), n=parseInt(document.getElementById('integ-n').value);
+  if(isNaN(a)||isNaN(b)||!n) return errBox('integ-result','Valores inválidos.');
+  const h=(b-a)/n, f=x=>evalFx(expr,x); let s=f(a)+f(b);
+  for(let i=1;i<n;i++) s+=2*f(a+i*h);
+  showResult('integ-result', resultBox('Integral Definida',[['∫ₐᵇ f(x)dx',((h/2)*s).toFixed(10)],['n=',n],['Método','Trapecio compuesto']]));
+}
+
+// ════ U4: CUADRATURA GAUSSIANA ════
+// Gauss-Legendre nodes and weights
+const GL={
+  2:{t:[-0.5773502691896257,0.5773502691896257],w:[1,1]},
+  3:{t:[-0.7745966692414834,0,0.7745966692414834],w:[0.5555555555555556,0.8888888888888888,0.5555555555555556]},
+  4:{t:[-0.8611363115940526,-0.3399810435848563,0.3399810435848563,0.8611363115940526],w:[0.3478548451374538,0.6521451548625461,0.6521451548625461,0.3478548451374538]},
+  5:{t:[-0.9061798459386640,-0.5384693101056831,0,0.5384693101056831,0.9061798459386640],w:[0.2369268850561891,0.4786286704993665,0.5688888888888889,0.4786286704993665,0.2369268850561891]}
+};
+function cuadraturaExample(){document.getElementById('cg-fx').value='Math.exp(-x*x)';document.getElementById('cg-a').value=0;document.getElementById('cg-b').value=1;}
+function cuadraturaSolve(){
+  const expr=document.getElementById('cg-fx').value;
+  const a=parseFloat(document.getElementById('cg-a').value), b=parseFloat(document.getElementById('cg-b').value), n=parseInt(document.getElementById('cg-n').value);
+  if(isNaN(a)||isNaN(b)) return errBox('cg-result','Valores inválidos.');
+  const f=x=>evalFx(expr,x), g=GL[n], c1=(b-a)/2, c2=(a+b)/2;
+  let I=0; for(let i=0;i<n;i++) I+=g.w[i]*f(c1*g.t[i]+c2);
+  I*=c1;
+  const nodesInfo=g.t.map((t,i)=>`t${i+1}=${t.toFixed(4)}, w=${g.w[i].toFixed(4)}, f=${f(c1*t+c2).toFixed(6)}`).join('<br>');
+  showResult('cg-result', resultBox('Cuadratura Gaussiana',[['∫ f(x)dx',I.toFixed(10)],['Puntos n',n],['[a,b]',`[${a}, ${b}]`]])+`<div class="info-result" style="margin-top:12px;font-size:.72rem;line-height:2">Nodos y pesos:<br>${nodesInfo}</div>`);
+}
+
+// ════ U5: LAGRANGE ════
+function lagrangeExample(){document.getElementById('lag-xs').value='0,1,2,3';document.getElementById('lag-ys').value='1,2.718,7.389,20.086';document.getElementById('lag-xp').value=1.5;}
+function lagrangeSolve(){
+  const xs=document.getElementById('lag-xs').value.split(',').map(Number);
+  const ys=document.getElementById('lag-ys').value.split(',').map(Number);
+  const xp=parseFloat(document.getElementById('lag-xp').value);
+  if(xs.some(isNaN)||ys.some(isNaN)||isNaN(xp)) return errBox('lag-result','Valores inválidos.');
+  if(xs.length!==ys.length) return errBox('lag-result','x e y deben tener el mismo número de valores.');
+  const n=xs.length; let P=0;
+  const bases=[];
+  for(let i=0;i<n;i++){let L=1;for(let j=0;j<n;j++)if(j!==i)L*=(xp-xs[j])/(xs[i]-xs[j]);bases.push(L);P+=ys[i]*L;}
+  const bInfo=bases.map((L,i)=>`L${i}(${xp})=${L.toFixed(6)}`).join(' | ');
+  showResult('lag-result', resultBox('Interpolación de Lagrange',[['x interpolado',xp],['P(x)',P.toFixed(10)],['n puntos',n]])+`<div class="info-result" style="margin-top:12px;font-size:.72rem;line-height:2">Bases: ${bInfo}</div>`);
+}
+
+// ════ U5: MÍNIMOS CUADRADOS ════
+function minCuadExample(){document.getElementById('mc-xs').value='1,2,3,4,5';document.getElementById('mc-ys').value='2.1,3.9,6.2,7.8,10.1';}
+function minCuadSolve(){
+  const xs=document.getElementById('mc-xs').value.split(',').map(Number);
+  const ys=document.getElementById('mc-ys').value.split(',').map(Number);
+  if(xs.some(isNaN)||ys.some(isNaN)) return errBox('mc-result','Valores inválidos.');
+  if(xs.length!==ys.length||xs.length<2) return errBox('mc-result','Necesitas al menos 2 puntos.');
+  const n=xs.length;
+  const sx=xs.reduce((a,v)=>a+v,0), sy=ys.reduce((a,v)=>a+v,0);
+  const sxy=xs.reduce((a,v,i)=>a+v*ys[i],0), sx2=xs.reduce((a,v)=>a+v*v,0);
+  const b=(n*sxy-sx*sy)/(n*sx2-sx*sx), a=(sy-b*sx)/n;
+  const yMean=sy/n;
+  const SStot=ys.reduce((s,v)=>s+Math.pow(v-yMean,2),0);
+  const SSres=ys.reduce((s,v,i)=>s+Math.pow(v-(a+b*xs[i]),2),0);
+  const R2=1-SSres/SStot;
+  const ptsInfo=xs.map((x,i)=>{const yfit=a+b*x;return`(${x}, ${ys[i]}) → ŷ=${yfit.toFixed(4)}, res=${(ys[i]-yfit).toFixed(4)}`;}).join('<br>');
+  showResult('mc-result', resultBox('Mínimos Cuadrados Lineales',[['a (intercepto)',a.toFixed(8)],['b (pendiente)',b.toFixed(8)],['R² (ajuste)',R2.toFixed(8)],['Ecuación',`y = ${a.toFixed(4)} + ${b.toFixed(4)}x`]])+`<div class="info-result" style="margin-top:12px;font-size:.72rem;line-height:2">Residuos por punto:<br>${ptsInfo}</div>`);
+}
+// ════ INTRO OVERLAY ════
+function closeIntro() {
+  const overlay = document.getElementById('intro-overlay');
+  overlay.classList.add('hidden');
+  setTimeout(() => { if (overlay) overlay.remove(); }, 400); // Libera memoria del DOM
+}
+
+// ════ AUTHORS OVERLAY ════
+function showAuthors() {
+  document.getElementById('authors-overlay').classList.remove('hidden');
+}
+function closeAuthors() {
+  document.getElementById('authors-overlay').classList.add('hidden');
+}
+</script>
+</body>
+</html>
